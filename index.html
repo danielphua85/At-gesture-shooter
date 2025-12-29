@@ -3,37 +3,34 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Ang Bao Shooter (v3)</title>
+  <title>Coach Daniel Reaction Game</title>
   <style>
     html, body { margin:0; padding:0; height:100%; background:#000; overflow:hidden; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
     #wrap { position:fixed; inset:0; }
-    video {
-      position:fixed; inset:0;
-      width:100%; height:100%;
-      object-fit:cover;
-      transform: scaleX(-1);
+    video{
+      position:fixed; inset:0; width:100%; height:100%;
+      object-fit:cover; transform:scaleX(-1);
       background:#000;
     }
-    canvas { position:fixed; inset:0; width:100%; height:100%; }
-    #hud { position:fixed; inset:0; pointer-events:none; }
+    canvas{ position:fixed; inset:0; width:100%; height:100%; }
 
-    #crosshair {
-      position:fixed; width:18px; height:18px;
+    #hud{ position:fixed; inset:0; pointer-events:none; }
+    #crosshair{
+      position:fixed; width:16px; height:16px;
       left:50%; top:50%;
       transform:translate(-50%,-50%);
       border:2px solid rgba(255,215,0,0.95);
       border-radius:50%;
-      box-shadow: 0 0 12px rgba(255,215,0,0.35);
+      box-shadow:0 0 12px rgba(255,215,0,0.35);
     }
-
     #topbar{
       position:fixed; left:0; right:0; top:0;
       padding:10px 12px calc(10px + env(safe-area-inset-top));
       display:flex; gap:10px; justify-content:space-between; align-items:center;
-      color:#fff; font-weight:800;
-      background:linear-gradient(to bottom, rgba(0,0,0,0.60), rgba(0,0,0,0.10));
+      background:linear-gradient(to bottom, rgba(0,0,0,0.62), rgba(0,0,0,0.10));
       border-bottom:1px solid rgba(255,255,255,0.10);
       backdrop-filter: blur(10px);
+      color:#fff; font-weight:900;
     }
     .pill{
       display:inline-flex; align-items:center; gap:8px;
@@ -44,8 +41,7 @@
       font-size:13px;
       white-space:nowrap;
     }
-
-    #hint {
+    #hint{
       position:fixed; left:50%; bottom:14px;
       transform:translateX(-50%);
       padding:10px 12px;
@@ -54,64 +50,60 @@
       border:1px solid rgba(255,255,255,0.15);
       border-radius:12px;
       backdrop-filter: blur(8px);
-      max-width:min(92vw, 520px);
+      max-width:min(92vw, 560px);
       text-align:center;
+      pointer-events:none;
     }
 
-    #overlay {
+    #overlay{
       position:fixed; inset:0;
       display:flex; align-items:center; justify-content:center;
-      flex-direction:column;
+      padding:22px;
+      z-index:9999;
       color:#fff;
       background: radial-gradient(1200px 800px at 50% 40%, rgba(255,0,60,0.18), rgba(0,0,0,0.95));
-      z-index:9999;
       text-align:center;
-      padding:24px;
     }
-    #panel {
-      max-width:560px;
+    #panel{
+      width:min(560px, 92vw);
       background:rgba(0,0,0,0.38);
       border:1px solid rgba(255,255,255,0.12);
-      border-radius:16px;
+      border-radius:18px;
       padding:16px 18px;
       backdrop-filter: blur(10px);
     }
-    #panel h1 { margin:0 0 8px; font-size:18px; }
-    #panel p { margin:8px 0; font-size:13px; opacity:0.9; }
+    #panel h1{ margin:0 0 8px; font-size:18px; }
+    #panel p{ margin:8px 0; font-size:13px; opacity:0.92; }
+    .btnRow{ display:flex; flex-direction:column; gap:8px; margin-top:10px; }
 
-    .btnLevel, #btnStart {
-      margin-top:10px;
+    button{
+      width:100%;
       padding:12px 14px;
       border-radius:14px;
       border:1px solid rgba(255,255,255,0.18);
       background:rgba(255,0,60,0.18);
       color:#fff;
-      font-weight:900;
-      width:min(360px, 90vw);
+      font-weight:950;
     }
-    .btnRow{ display:flex; flex-direction:column; gap:8px; margin-top:10px; }
-    .btnLevel small{ font-weight:650; opacity:0.85; display:block; margin-top:2px; }
-    .btnLevel:active, #btnStart:active { transform: scale(0.99); }
+    button:active{ transform:scale(0.99); }
 
     .floatText{
       position:fixed;
       left:50%; top:50%;
       transform:translate(-50%,-50%);
-      color:#fff; font-weight:950; letter-spacing:0.6px;
-      text-shadow: 0 2px 16px rgba(0,0,0,0.70);
+      font-weight:950;
+      letter-spacing:0.5px;
+      text-shadow:0 2px 16px rgba(0,0,0,0.70);
       pointer-events:none;
       will-change: transform, opacity;
     }
 
-    #resultTitle{ font-size:22px; font-weight:950; margin:0 0 6px; }
-    #resultSub{ font-size:13px; opacity:0.92; margin:0 0 12px; }
-
     #caishenWrap{
-      width:min(360px, 86vw);
-      margin:10px auto 8px;
-      background:rgba(0,0,0,0.25);
-      border:1px solid rgba(255,255,255,0.12);
+      width:min(420px, 92vw);
+      margin:10px auto 6px;
       border-radius:18px;
+      border:1px solid rgba(255,255,255,0.12);
+      background:rgba(0,0,0,0.22);
       padding:12px;
     }
     #caishenSVG{
@@ -120,11 +112,9 @@
       display:block;
       filter: drop-shadow(0 10px 18px rgba(0,0,0,0.6));
     }
-
     #tiny{ margin-top:8px; font-size:11px; opacity:0.75; }
   </style>
 </head>
-
 <body>
   <div id="wrap">
     <video id="cam" playsinline autoplay muted></video>
@@ -134,15 +124,16 @@
       <div id="topbar">
         <div class="pill">💰 Score: <span id="score">$0</span></div>
         <div class="pill">⏱️ Time: <span id="time">60</span>s</div>
-        <div class="pill">🎯 Goal: <span id="goal">$0</span></div>
+        <div class="pill">🎯 Win Min: <span id="winmin">$0</span></div>
       </div>
       <div id="crosshair"></div>
-      <div id="hint">🪙 +$5 • 🧧 +$10 • 🧨 -$2 — Make a <b>pistol</b> hand, tap thumb near index knuckle to shoot.</div>
+      <div id="hint">
+        Rules: Make a <b>pistol</b> hand (index out, other fingers curled). <b>Shoot</b> by tapping thumb closer to index knuckle.
+        <br/>🧧 Ang Bao = <b>+$10</b> • 🧨 Firecracker = <b>-$5</b>
+      </div>
     </div>
 
-    <div id="overlay">
-      <div id="panel"></div>
-    </div>
+    <div id="overlay"><div id="panel"></div></div>
   </div>
 
   <!-- Three.js (pinned) -->
@@ -158,548 +149,535 @@
     // -----------------------------
     // Helpers
     // -----------------------------
-    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-    const lerp  = (a, b, t) => a + (b - a) * t;
-    const now = () => performance.now();
-    const rand = (a,b)=> a + Math.random()*(b-a);
+    const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+    const lerp  = (a,b,t)=>a+(b-a)*t;
+    const now   = ()=>performance.now();
+    const rand  = (a,b)=>a+Math.random()*(b-a);
 
-    function dist2(a, b) {
-      const dx = a.x - b.x, dy = a.y - b.y;
-      return Math.sqrt(dx*dx + dy*dy);
+    function dist2(a,b){
+      const dx=a.x-b.x, dy=a.y-b.y;
+      return Math.sqrt(dx*dx+dy*dy);
     }
 
     // -----------------------------
-    // Audio (more distinct "cash-out" on hit)
+    // Audio (distinct cash-out)
     // -----------------------------
-    let audioCtx = null;
-    function ensureAudio() {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
+    let audioCtx=null;
+    function ensureAudio(){
+      if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+      if(audioCtx.state==='suspended') audioCtx.resume().catch(()=>{});
     }
 
-    // softer "pew"
-    function sfxShoot() {
-      if (!audioCtx) return;
-      const t = audioCtx.currentTime;
-      const o = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      o.type = 'square';
-      o.frequency.setValueAtTime(240, t);
-      o.frequency.exponentialRampToValueAtTime(560, t + 0.05);
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.06, t + 0.01);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+    // soft shoot click
+    function sfxShoot(){
+      if(!audioCtx) return;
+      const t=audioCtx.currentTime;
+      const o=audioCtx.createOscillator();
+      const g=audioCtx.createGain();
+      o.type='square';
+      o.frequency.setValueAtTime(220,t);
+      o.frequency.exponentialRampToValueAtTime(520,t+0.05);
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(0.055,t+0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.08);
       o.connect(g).connect(audioCtx.destination);
-      o.start(t); o.stop(t + 0.09);
+      o.start(t); o.stop(t+0.09);
     }
 
-    // very obvious "coin jingle / cash-out"
-    function sfxCashOut() {
-      if (!audioCtx) return;
-      const t = audioCtx.currentTime;
+    // obvious "cashier cash-out" (coin jingle + tiny rustle)
+    function sfxCashOut(){
+      if(!audioCtx) return;
+      const t=audioCtx.currentTime;
 
-      // multiple short pings (like coins)
-      const freqs = [1560, 1240, 980];
-      freqs.forEach((f, i) => {
-        const o = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
-        o.type = 'sine';
-        o.frequency.setValueAtTime(f, t + i*0.02);
-        o.frequency.exponentialRampToValueAtTime(f*0.72, t + i*0.02 + 0.10);
-        g.gain.setValueAtTime(0.0001, t + i*0.02);
-        g.gain.exponentialRampToValueAtTime(0.16, t + i*0.02 + 0.01);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + i*0.02 + 0.14);
+      const freqs=[1560,1240,980,1320];
+      freqs.forEach((f,i)=>{
+        const o=audioCtx.createOscillator();
+        const g=audioCtx.createGain();
+        o.type='sine';
+        o.frequency.setValueAtTime(f,t+i*0.02);
+        o.frequency.exponentialRampToValueAtTime(f*0.72,t+i*0.02+0.11);
+        g.gain.setValueAtTime(0.0001,t+i*0.02);
+        g.gain.exponentialRampToValueAtTime(0.18,t+i*0.02+0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001,t+i*0.02+0.16);
         o.connect(g).connect(audioCtx.destination);
-        o.start(t + i*0.02);
-        o.stop(t + i*0.02 + 0.16);
+        o.start(t+i*0.02);
+        o.stop(t+i*0.02+0.18);
       });
 
-      // tiny noise "cash rustle"
-      const dur = 0.12;
-      const bufferSize = Math.floor(audioCtx.sampleRate * dur);
-      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i=0;i<bufferSize;i++){
-        data[i] = (Math.random()*2-1) * Math.pow(1 - i/bufferSize, 2) * 0.25;
+      // short noise rustle
+      const dur=0.12;
+      const n=audioCtx.sampleRate*dur|0;
+      const buf=audioCtx.createBuffer(1,n,audioCtx.sampleRate);
+      const data=buf.getChannelData(0);
+      for(let i=0;i<n;i++){
+        data[i]=(Math.random()*2-1)*Math.pow(1-i/n,2)*0.22;
       }
-      const noise = audioCtx.createBufferSource();
-      noise.buffer = buffer;
-      const gN = audioCtx.createGain();
-      gN.gain.setValueAtTime(0.0001, t);
-      gN.gain.exponentialRampToValueAtTime(0.07, t + 0.01);
-      gN.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      noise.connect(gN).connect(audioCtx.destination);
-      noise.start(t);
-      noise.stop(t + dur);
+      const src=audioCtx.createBufferSource();
+      src.buffer=buf;
+      const gN=audioCtx.createGain();
+      gN.gain.setValueAtTime(0.0001,t);
+      gN.gain.exponentialRampToValueAtTime(0.08,t+0.01);
+      gN.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+      src.connect(gN).connect(audioCtx.destination);
+      src.start(t); src.stop(t+dur);
     }
 
-    function sfxBad() {
-      if (!audioCtx) return;
-      const t = audioCtx.currentTime;
-      const o = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      o.type = 'triangle';
-      o.frequency.setValueAtTime(150, t);
-      o.frequency.exponentialRampToValueAtTime(70, t + 0.14);
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.10, t + 0.01);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+    // negative hit sound (firecracker penalty)
+    function sfxBad(){
+      if(!audioCtx) return;
+      const t=audioCtx.currentTime;
+      const o=audioCtx.createOscillator();
+      const g=audioCtx.createGain();
+      o.type='triangle';
+      o.frequency.setValueAtTime(160,t);
+      o.frequency.exponentialRampToValueAtTime(70,t+0.14);
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(0.11,t+0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.16);
       o.connect(g).connect(audioCtx.destination);
-      o.start(t); o.stop(t + 0.17);
+      o.start(t); o.stop(t+0.17);
     }
 
-    function floatText(text, x, y, color='rgba(255,215,0,1)') {
-      const el = document.createElement('div');
-      el.className = 'floatText';
-      el.textContent = text;
-      el.style.left = `${x}px`;
-      el.style.top  = `${y}px`;
-      el.style.fontSize = '22px';
-      el.style.color = color;
+    // -----------------------------
+    // Floating VFX text
+    // -----------------------------
+    function floatText(text,x,y,color){
+      const el=document.createElement('div');
+      el.className='floatText';
+      el.textContent=text;
+      el.style.left=`${x}px`;
+      el.style.top=`${y}px`;
+      el.style.fontSize='22px';
+      el.style.color=color;
       document.body.appendChild(el);
 
-      const start = now();
-      const dur = 720;
-      const y0 = y;
-      function tick() {
-        const t = (now() - start) / dur;
-        if (t >= 1) { el.remove(); return; }
-        const yy = y0 - (t * 72);
-        const s  = 1 + t * 0.18;
-        el.style.transform = `translate(-50%,-50%) translateY(${yy-y0}px) scale(${s})`;
-        el.style.opacity = `${1 - t}`;
+      const start=now();
+      const dur=720;
+      const y0=y;
+      (function tick(){
+        const t=(now()-start)/dur;
+        if(t>=1){ el.remove(); return; }
+        const yy=y0-(t*74);
+        const s=1+t*0.18;
+        el.style.transform=`translate(-50%,-50%) translateY(${yy-y0}px) scale(${s})`;
+        el.style.opacity=`${1-t}`;
         requestAnimationFrame(tick);
-      }
-      requestAnimationFrame(tick);
+      })();
     }
 
     // -----------------------------
     // DOM
     // -----------------------------
-    const video = document.getElementById('cam');
-    const canvas = document.getElementById('gl');
-    const overlay = document.getElementById('overlay');
-    const panel = document.getElementById('panel');
-    const scoreEl = document.getElementById('score');
-    const timeEl  = document.getElementById('time');
-    const goalEl  = document.getElementById('goal');
-    const crosshair = document.getElementById('crosshair');
+    const video=document.getElementById('cam');
+    const canvas=document.getElementById('gl');
+    const overlay=document.getElementById('overlay');
+    const panel=document.getElementById('panel');
+    const scoreEl=document.getElementById('score');
+    const timeEl=document.getElementById('time');
+    const winMinEl=document.getElementById('winmin');
+    const crosshair=document.getElementById('crosshair');
 
     // -----------------------------
-    // Game settings
+    // Rules & levels
     // -----------------------------
-    const LEVELS = {
-      easy: { total: 20, speed: 0.11 },
-      mid:  { total: 40, speed: 0.16 },
-      hard: { total: 80, speed: 0.23 },
-    };
-    const ROUND_SECONDS = 60;
-    const ON_SCREEN = 4;
+    const ROUND_SECONDS=60;
+    const ON_SCREEN=4;
 
-    const TYPES = {
-      coin:     { label:'🪙', value:+5,  prob:0.38 },
-      angbao:   { label:'🧧', value:+10, prob:0.42 },
-      firework: { label:'🧨', value:-2,  prob:0.20 },
+    const LEVELS={
+      easy:{ angbaoTotal:20, baseSpeed:0.12 },
+      mid: { angbaoTotal:40, baseSpeed:0.17 },
+      hard:{ angbaoTotal:80, baseSpeed:0.24 },
     };
 
-    function pickType() {
-      const r = Math.random();
-      let acc = 0;
-      for (const k of Object.keys(TYPES)) {
-        acc += TYPES[k].prob;
-        if (r <= acc) return k;
-      }
-      return 'angbao';
-    }
+    // Scoring
+    const SCORE_ANGBAO=10;
+    const SCORE_FIRE=-5;
 
-    let selectedLevel = null;
-    let roundActive = false;
-    let timeLeft = ROUND_SECONDS;
+    // Firecracker spawn rate (not counted in "total angbao")
+    const FIRE_PROB=0.28; // more fun but still fair
 
-    let score = 0;
-    let totalSpawnLimit = 0;
-    let spawned = 0;
+    let selectedLevel=null;
+    let roundActive=false;
+    let timeLeft=ROUND_SECONDS;
 
-    // win condition based on HALF of total POSITIVE possible payout for this round
-    let totalPositivePossible = 0;
-    let goalScore = 0;
+    let score=0;
+    let angbaoHits=0;
+    let angbaoSpawned=0;
+    let angbaoTotal=0;
+    let winMin=0;
 
     // -----------------------------
     // Three.js
     // -----------------------------
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
-    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
-    const scene = new THREE.Scene();
+    const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio||1));
+    const scene=new THREE.Scene();
 
-    let W = 1, H = 1;
-    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -10, 10);
-    camera.position.z = 5;
+    let W=1,H=1;
+    const camera=new THREE.OrthographicCamera(-1,1,1,-1,-10,10);
+    camera.position.z=5;
 
-    // Laser line
-    const laserGeom = new THREE.BufferGeometry();
-    const laserVerts = new Float32Array(6);
-    laserGeom.setAttribute('position', new THREE.BufferAttribute(laserVerts, 3));
-    const laserMat = new THREE.LineBasicMaterial({ color: 0xffd700, transparent:true, opacity:0.85 });
-    const laserLine = new THREE.Line(laserGeom, laserMat);
+    // Laser
+    const laserGeom=new THREE.BufferGeometry();
+    const laserVerts=new Float32Array(6);
+    laserGeom.setAttribute('position', new THREE.BufferAttribute(laserVerts,3));
+    const laserMat=new THREE.LineBasicMaterial({color:0xffd700,transparent:true,opacity:0.85});
+    const laserLine=new THREE.Line(laserGeom,laserMat);
     scene.add(laserLine);
 
-    function worldFromNorm(nx, ny) {
-      const wx = (nx - 0.5) * 2;
-      const wy = (0.5 - ny) * 2;
-      return { x: wx, y: wy };
+    function worldFromNorm(nx,ny){
+      return { x:(nx-0.5)*2, y:(0.5-ny)*2 };
     }
 
     // -----------------------------
-    // Target textures (single-file, canvas-generated)
+    // Canvas textures (angbao + firecracker)
     // -----------------------------
-    function makeCanvasTexture(drawFn) {
-      const c = document.createElement('canvas');
-      c.width = 256; c.height = 256;
-      const ctx = c.getContext('2d');
+    function makeCanvasTexture(drawFn){
+      const c=document.createElement('canvas');
+      c.width=256; c.height=256;
+      const ctx=c.getContext('2d');
       drawFn(ctx);
-      const tex = new THREE.CanvasTexture(c);
-      tex.needsUpdate = true;
+      const tex=new THREE.CanvasTexture(c);
+      tex.needsUpdate=true;
       return tex;
     }
 
-    const texAngBao = makeCanvasTexture((ctx) => {
-      const g = ctx.createLinearGradient(0,0,256,256);
-      g.addColorStop(0, '#ff2a2a');
-      g.addColorStop(1, '#b9002a');
-      ctx.fillStyle = g;
-      ctx.fillRect(0,0,256,256);
-      ctx.strokeStyle = '#ffd700';
-      ctx.lineWidth = 12;
+    const texAngBao = makeCanvasTexture((ctx)=>{
+      const g=ctx.createLinearGradient(0,0,256,256);
+      g.addColorStop(0,'#ff2a2a'); g.addColorStop(1,'#b9002a');
+      ctx.fillStyle=g; ctx.fillRect(0,0,256,256);
+      ctx.strokeStyle='#ffd700'; ctx.lineWidth=12;
       ctx.strokeRect(16,16,224,224);
-      ctx.globalAlpha = 0.85;
-      ctx.lineWidth = 6;
+      ctx.globalAlpha=0.85; ctx.lineWidth=6;
       ctx.strokeRect(32,32,192,192);
-      ctx.globalAlpha = 1;
-      ctx.fillStyle = '#ffd700';
-      ctx.font = 'bold 140px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('福', 128, 132);
-      ctx.globalAlpha = 0.55;
-      for (let i=0;i<14;i++){
+      ctx.globalAlpha=1;
+      ctx.fillStyle='#ffd700';
+      ctx.font='bold 140px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('福',128,132);
+      // sparkle
+      ctx.globalAlpha=0.55;
+      for(let i=0;i<14;i++){
         ctx.beginPath();
-        ctx.arc(Math.random()*256, Math.random()*256, 2+Math.random()*3, 0, Math.PI*2);
+        ctx.arc(Math.random()*256,Math.random()*256,2+Math.random()*3,0,Math.PI*2);
         ctx.fill();
       }
-      ctx.globalAlpha = 1;
+      ctx.globalAlpha=1;
     });
 
-    const texCoin = makeCanvasTexture((ctx) => {
-      ctx.fillStyle = '#1b0d00';
-      ctx.fillRect(0,0,256,256);
-      const grad = ctx.createRadialGradient(90,80,20, 128,128,140);
-      grad.addColorStop(0, '#fff2b0');
-      grad.addColorStop(0.35, '#ffd700');
-      grad.addColorStop(1, '#b8860b');
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(128,128,92,0,Math.PI*2);
-      ctx.fill();
-
-      ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-      ctx.lineWidth = 10;
-      ctx.beginPath();
-      ctx.arc(128,128,78,0,Math.PI*2);
-      ctx.stroke();
-
-      ctx.fillStyle = '#7a4d00';
-      ctx.font = 'bold 120px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('$', 128, 136);
-
-      ctx.globalAlpha = 0.35;
-      ctx.fillStyle = '#fff';
-      ctx.beginPath();
-      ctx.arc(92,92,20,0,Math.PI*2);
-      ctx.fill();
-      ctx.globalAlpha = 1;
-    });
-
-    const texFire = makeCanvasTexture((ctx) => {
-      ctx.fillStyle = '#0b0b0b';
-      ctx.fillRect(0,0,256,256);
-
-      // firecracker body
-      const g = ctx.createLinearGradient(0,0,256,256);
-      g.addColorStop(0, '#ff3b3b');
-      g.addColorStop(1, '#a80018');
-      ctx.fillStyle = g;
-      ctx.fillRect(54,92,148,72);
-
-      // caps
-      ctx.fillStyle = '#ffd700';
+    const texFire = makeCanvasTexture((ctx)=>{
+      ctx.fillStyle='#0b0b0b'; ctx.fillRect(0,0,256,256);
+      const g=ctx.createLinearGradient(0,0,256,256);
+      g.addColorStop(0,'#ff3b3b'); g.addColorStop(1,'#a80018');
+      ctx.fillStyle=g; ctx.fillRect(54,92,148,72);
+      ctx.fillStyle='#ffd700';
       ctx.fillRect(54,92,18,72);
       ctx.fillRect(184,92,18,72);
-
       // fuse
-      ctx.strokeStyle = '#ffd700';
-      ctx.lineWidth = 10;
+      ctx.strokeStyle='#ffd700'; ctx.lineWidth=10;
       ctx.beginPath();
       ctx.moveTo(200,98);
       ctx.quadraticCurveTo(230,70,240,50);
       ctx.stroke();
-
-      // spark
-      ctx.fillStyle = '#ffcc00';
-      for (let i=0;i<10;i++){
+      // sparks
+      ctx.fillStyle='#ffcc00';
+      for(let i=0;i<10;i++){
         ctx.beginPath();
-        ctx.arc(238 + rand(-10,10), 48 + rand(-10,10), rand(3,6), 0, Math.PI*2);
+        ctx.arc(238+rand(-10,10),48+rand(-10,10),rand(3,6),0,Math.PI*2);
         ctx.fill();
       }
-
-      // warning
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 64px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('!', 128, 128);
+      ctx.fillStyle='#fff';
+      ctx.font='bold 64px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('!',128,128);
     });
 
-    function textureForType(typeKey) {
-      if (typeKey === 'coin') return texCoin;
-      if (typeKey === 'firework') return texFire;
-      return texAngBao;
-    }
-
     // -----------------------------
-    // Targets logic (more random motion)
+    // Targets
     // -----------------------------
-    const targets = [];
+    const targets=[];
 
-    function makeTargetMesh(typeKey) {
-      const geom = new THREE.PlaneGeometry(0.18, 0.22);
-      const mat = new THREE.MeshBasicMaterial({
-        map: textureForType(typeKey),
-        transparent: true,
-        opacity: 0.98
+    function makeMesh(type){
+      const geom=new THREE.PlaneGeometry(0.16,0.20); // slightly smaller -> harder
+      const mat=new THREE.MeshBasicMaterial({
+        map:(type==='angbao'?texAngBao:texFire),
+        transparent:true,
+        opacity:0.98
       });
-      const mesh = new THREE.Mesh(geom, mat);
+      const mesh=new THREE.Mesh(geom,mat);
       scene.add(mesh);
       return mesh;
     }
 
-    function spawnTarget() {
-      if (!roundActive) return null;
-      if (spawned >= totalSpawnLimit) return null;
+    function spawnOne(){
+      if(!roundActive) return null;
 
-      const typeKey = pickType();
-      const mesh = makeTargetMesh(typeKey);
+      // Decide type: keep angbaoTotal exact, firecrackers extra
+      let type='angbao';
+      if(angbaoSpawned >= angbaoTotal){
+        // after all angbao spawned, only spawn firecrackers if needed to keep 4 on screen
+        type='fire';
+      } else {
+        // during round, sprinkle firecrackers
+        type = (Math.random()<FIRE_PROB) ? 'fire' : 'angbao';
+        if(type==='angbao') angbaoSpawned++;
+      }
 
-      // Spawn near edges
-      const edge = Math.floor(Math.random()*4);
-      const pad = 0.12;
-      let x, y;
-      if (edge === 0) { x = Math.random(); y = -pad; }
-      if (edge === 1) { x = 1+pad; y = Math.random(); }
-      if (edge === 2) { x = Math.random(); y = 1+pad; }
-      if (edge === 3) { x = -pad; y = Math.random(); }
+      const mesh=makeMesh(type);
 
-      // Random destination (NOT always center)
-      const dest = { x: rand(0.10, 0.90), y: rand(0.15, 0.85) };
+      // spawn at edges
+      const edge=Math.floor(Math.random()*4);
+      const pad=0.12;
+      let x,y;
+      if(edge===0){ x=Math.random(); y=-pad; }
+      if(edge===1){ x=1+pad; y=Math.random(); }
+      if(edge===2){ x=Math.random(); y=1+pad; }
+      if(edge===3){ x=-pad; y=Math.random(); }
 
-      // Velocity towards destination, plus sideways drift
-      const base = LEVELS[selectedLevel].speed;
-      const speed = base * rand(0.85, 1.35);
+      // random destination (NOT center)
+      let dest={ x:rand(0.08,0.92), y:rand(0.14,0.86) };
 
-      const dx = dest.x - x;
-      const dy = dest.y - y;
-      const len = Math.max(0.0001, Math.hypot(dx,dy));
-      let vx = (dx/len) * speed;
-      let vy = (dy/len) * speed;
+      const base=LEVELS[selectedLevel].baseSpeed;
+      const speed=base*rand(0.90,1.45);
 
-      // Add random lateral component so paths vary
-      const lateral = rand(-0.09, 0.09) * base;
-      vx += - (dy/len) * lateral;
-      vy +=   (dx/len) * lateral;
+      const dx=dest.x-x, dy=dest.y-y;
+      const len=Math.max(0.0001, Math.hypot(dx,dy));
+      let vx=(dx/len)*speed;
+      let vy=(dy/len)*speed;
 
-      const t = {
-        typeKey,
-        value: TYPES[typeKey].value,
+      // lateral push + curvy motion
+      const lateral=rand(-0.14,0.14)*base;
+      vx += -(dy/len)*lateral;
+      vy +=  (dx/len)*lateral;
+
+      const t={
+        type,
         mesh,
-        x, y,
-        vx, vy,
+        x,y,
+        vx,vy,
         dest,
-        r: (typeKey === 'coin') ? 0.11 : (typeKey === 'firework' ? 0.12 : 0.13),
-        alive: true,
-        // extra wobble params
-        wobbleA: rand(0.03, 0.07),
-        wobbleF: rand(1.5, 3.2),
-        spin: rand(-0.9, 0.9),
-        born: now()
+        alive:true,
+        born:now(),
+        wobbleA:rand(0.035,0.075),
+        wobbleF:rand(1.8,3.6),
+        spin:rand(-1.2,1.2),
+        // harder hit radius
+        r: (type==='angbao') ? 0.085 : 0.090
       };
-
-      spawned += 1;
-      if (t.value > 0) totalPositivePossible += t.value;
 
       targets.push(t);
       return t;
     }
 
-    function ensureOnScreen() {
-      if (!roundActive) return;
-      while (targets.filter(t=>t.alive).length < ON_SCREEN && spawned < totalSpawnLimit) {
-        spawnTarget();
+    function ensureTargets(){
+      if(!roundActive) return;
+      while(targets.filter(t=>t.alive).length < ON_SCREEN){
+        // stop spawning if angbao finished and we already have 4 firecrackers? keep it alive anyway
+        spawnOne();
+        // safety break (should never loop forever)
+        if(targets.length > 2000) break;
       }
     }
 
-    function clearTargets() {
-      for (const t of targets) {
-        if (t.mesh) scene.remove(t.mesh);
+    function clearTargets(){
+      for(const t of targets){
+        if(t.mesh) scene.remove(t.mesh);
       }
-      targets.length = 0;
+      targets.length=0;
     }
 
     // -----------------------------
-    // Aim & gesture
+    // Aim + gesture
     // -----------------------------
-    const cross = { x: 0.5, y: 0.5 };
+    const cross={x:0.5,y:0.5};
+    let hands=null;
+    let modelReady=false;
+    let lastHand=null;
+    let pistolActive=false;
+    let prevTrigger=false;
 
-    let hands = null;
-    let modelReady = false;
-    let lastHand = null;
-    let pistolActive = false;
-    let prevTrigger = false;
+    // AI throttle
+    const AI_HZ=15;
+    const AI_DT=1000/AI_HZ;
+    let lastAi=0;
 
-    // throttle AI
-    const AI_HZ = 15;
-    const AI_DT = 1000 / AI_HZ;
-    let lastAi = 0;
-
-    function isFingerExtended(lm, tip, pip, mcp) {
-      const t = lm[tip], p = lm[pip], m = lm[mcp];
+    function isFingerExtended(lm, tip, pip, mcp){
+      const t=lm[tip], p=lm[pip], m=lm[mcp];
       return (t.y < p.y) && (p.y < m.y);
     }
-    function isFingerCurled(lm, tip, pip, mcp) {
-      const t = lm[tip], p = lm[pip], m = lm[mcp];
+    function isFingerCurled(lm, tip, pip, mcp){
+      const t=lm[tip], p=lm[pip], m=lm[mcp];
       return (t.y > p.y) || (t.y > m.y);
     }
 
-    function updateGesture() {
-      pistolActive = false;
-      let triggerNow = false;
-      let aimPoint = null;
+    function updateGesture(){
+      pistolActive=false;
+      let triggerNow=false;
+      let aimPoint=null;
 
-      if (!lastHand || !lastHand.landmarks || lastHand.landmarks.length < 21) {
-        prevTrigger = false;
+      if(!lastHand || !lastHand.landmarks || lastHand.landmarks.length<21){
+        prevTrigger=false;
         return { pistol:false, trigger:false, aim:null };
       }
 
-      const lm = lastHand.landmarks;
-      const indexExt  = isFingerExtended(lm, 8, 6, 5);
-      const middleCur = isFingerCurled(lm, 12, 10, 9);
-      const ringCur   = isFingerCurled(lm, 16, 14, 13);
-      const pinkyCur  = isFingerCurled(lm, 20, 18, 17);
-
+      const lm=lastHand.landmarks;
+      const indexExt  = isFingerExtended(lm,8,6,5);
+      const middleCur = isFingerCurled(lm,12,10,9);
+      const ringCur   = isFingerCurled(lm,16,14,13);
+      const pinkyCur  = isFingerCurled(lm,20,18,17);
       pistolActive = indexExt && middleCur && ringCur && pinkyCur;
 
-      const idxTip = lm[8];
-      aimPoint = { x: 1 - idxTip.x, y: idxTip.y };
+      const idxTip=lm[8];
+      aimPoint={ x:1-idxTip.x, y:idxTip.y };
 
-      // Trigger sensitivity (tune here if you want)
-      const thumbTip = lm[4];
-      const idxMCP = lm[5];
-      const a = { x: 1 - thumbTip.x, y: thumbTip.y };
-      const b = { x: 1 - idxMCP.x, y: idxMCP.y };
-      const d = dist2(a,b);
-      triggerNow = pistolActive && (d < 0.095);
+      // trigger sensitivity (tweak if needed)
+      const thumbTip=lm[4];
+      const idxMCP=lm[5];
+      const a={ x:1-thumbTip.x, y:thumbTip.y };
+      const b={ x:1-idxMCP.x, y:idxMCP.y };
+      const d=dist2(a,b);
 
+      triggerNow = pistolActive && (d < 0.090); // slightly harder than before
       const fired = triggerNow && !prevTrigger;
       prevTrigger = triggerNow;
 
       return { pistol:pistolActive, trigger:fired, aim:aimPoint };
     }
 
-    function applyAimAssist(aim, dt) {
-      if (!aim) return;
+    function applyAimAssist(aim, dt){
+      if(!aim) return;
 
-      // follow finger
-      cross.x = lerp(cross.x, aim.x, clamp(dt*10, 0, 1));
-      cross.y = lerp(cross.y, aim.y, clamp(dt*10, 0, 1));
+      // follow finger (smooth)
+      cross.x = lerp(cross.x, aim.x, clamp(dt*10,0,1));
+      cross.y = lerp(cross.y, aim.y, clamp(dt*10,0,1));
 
-      // magnet to nearest target (but smaller than before)
-      let best = null;
-      let bestD = 999;
-      for (const t of targets) {
-        if (!t.alive) continue;
-        const dd = Math.hypot(t.x - cross.x, t.y - cross.y);
-        if (dd < bestD) { bestD = dd; best = t; }
+      // weaker magnet (harder)
+      let best=null, bestD=999;
+      for(const t of targets){
+        if(!t.alive) continue;
+        const dd=Math.hypot(t.x-cross.x, t.y-cross.y);
+        if(dd < bestD){ bestD=dd; best=t; }
       }
 
-      const magnetR = 0.13; // reduced so you can’t just camp center as easily
-      if (best && bestD < magnetR) {
-        const k = (1 - (bestD / magnetR));
-        const snap = clamp(k * dt * 16, 0, 1);
+      const magnetR = 0.090; // smaller -> harder to "auto-snap"
+      if(best && bestD < magnetR){
+        const k = 1 - (bestD / magnetR);
+        const snap = clamp(k * dt * 12, 0, 1);
         cross.x = lerp(cross.x, best.x, snap);
         cross.y = lerp(cross.y, best.y, snap);
       }
     }
 
-    function setCrosshairDOM() {
-      crosshair.style.left = `${cross.x * W}px`;
-      crosshair.style.top  = `${cross.y * H}px`;
+    function setCrosshairDOM(){
+      crosshair.style.left = `${cross.x*W}px`;
+      crosshair.style.top  = `${cross.y*H}px`;
     }
 
-    function updateLaser(aim) {
-      if (!aim) { laserMat.opacity = 0.0; return; }
-      laserMat.opacity = pistolActive ? 0.90 : 0.25;
+    function updateLaser(aim){
+      if(!aim){ laserMat.opacity=0.0; return; }
+      laserMat.opacity = pistolActive ? 0.90 : 0.20;
 
-      const a = worldFromNorm(aim.x, aim.y);
-      const b = worldFromNorm(cross.x, cross.y);
-      const pos = laserGeom.attributes.position.array;
+      const a=worldFromNorm(aim.x, aim.y);
+      const b=worldFromNorm(cross.x, cross.y);
+      const pos=laserGeom.attributes.position.array;
       pos[0]=a.x; pos[1]=a.y; pos[2]=0;
       pos[3]=b.x; pos[4]=b.y; pos[5]=0;
-      laserGeom.attributes.position.needsUpdate = true;
+      laserGeom.attributes.position.needsUpdate=true;
     }
 
-    function shoot() {
-      if (!roundActive) return;
+    function shoot(){
+      if(!roundActive) return;
       ensureAudio();
       sfxShoot();
 
-      let hitT = null;
-      let bestD = 999;
-      for (const t of targets) {
-        if (!t.alive) continue;
-        const dd = Math.hypot(t.x - cross.x, t.y - cross.y);
-        if (dd < bestD) { bestD = dd; hitT = t; }
+      let hit=null, bestD=999;
+      for(const t of targets){
+        if(!t.alive) continue;
+        const dd=Math.hypot(t.x-cross.x, t.y-cross.y);
+        if(dd<bestD){ bestD=dd; hit=t; }
       }
 
-      const px = cross.x * W, py = cross.y * H;
+      const px=cross.x*W, py=cross.y*H;
 
-      if (hitT && bestD < hitT.r) {
-        hitT.alive = false;
-        scene.remove(hitT.mesh);
+      if(hit && bestD < hit.r){
+        hit.alive=false;
+        scene.remove(hit.mesh);
 
-        // score by type
-        score += hitT.value;
-        if (score < 0) score = 0; // prevent negative display
-        scoreEl.textContent = `$${score}`;
-
-        if (hitT.value > 0) {
-          sfxCashOut(); // cash-out sound on positive hit
-          floatText(`+ $${hitT.value}`, px, py, 'rgba(255,215,0,1)');
+        if(hit.type==='angbao'){
+          score += SCORE_ANGBAO;
+          angbaoHits += 1;
+          sfxCashOut();
+          floatText("+$10", px, py, "rgba(255,215,0,1)");
         } else {
+          score += SCORE_FIRE; // negative
           sfxBad();
-          floatText(`- $${Math.abs(hitT.value)}`, px, py, 'rgba(255,120,120,1)');
+          floatText("-$5", px, py, "rgba(255,120,120,1)");
         }
 
-        ensureOnScreen();
+        // optional clamp (keeps UI clean)
+        if(score < 0) score = 0;
+        scoreEl.textContent = `$${score}`;
+
+        ensureTargets();
       } else {
-        floatText("MISS", px, py, 'rgba(170,200,255,0.95)');
+        floatText("MISS", px, py, "rgba(180,210,255,0.95)");
       }
     }
 
     // -----------------------------
-    // Round control + end screen
+    // Target movement (more animation & randomness)
     // -----------------------------
-    function caishenSVG() {
-      // Inline SVG "image" of 财神爷 (still single-file)
+    function updateTargets(dt){
+      for(const t of targets){
+        if(!t.alive) continue;
+
+        // base
+        t.x += t.vx*dt;
+        t.y += t.vy*dt;
+
+        // curvy wobble
+        const age=(now()-t.born)/1000;
+        t.x += Math.sin(age*t.wobbleF) * t.wobbleA * dt;
+        t.y += Math.cos(age*(t.wobbleF*0.92)) * (t.wobbleA*0.85) * dt;
+
+        // re-target frequently so you cannot camp middle
+        const d=Math.hypot(t.dest.x-t.x, t.dest.y-t.y);
+        if(d < 0.10){
+          t.dest = { x:rand(0.06,0.94), y:rand(0.12,0.88) };
+          const base=LEVELS[selectedLevel].baseSpeed;
+          const speed=base*rand(0.90,1.45);
+          const dx=t.dest.x-t.x, dy=t.dest.y-t.y;
+          const len=Math.max(0.0001, Math.hypot(dx,dy));
+          let vx=(dx/len)*speed;
+          let vy=(dy/len)*speed;
+          const lateral=rand(-0.16,0.16)*base;
+          vx += -(dy/len)*lateral;
+          vy +=  (dx/len)*lateral;
+          t.vx=vx; t.vy=vy;
+        }
+
+        // if out-of-bounds, replace
+        if(t.x < -0.25 || t.x > 1.25 || t.y < -0.25 || t.y > 1.25){
+          t.alive=false;
+          scene.remove(t.mesh);
+          ensureTargets();
+          continue;
+        }
+
+        // mesh animation
+        const w=worldFromNorm(t.x,t.y);
+        t.mesh.position.set(w.x,w.y,0);
+
+        const pulse=1 + 0.10*Math.sin(now()*0.006 + t.x*12);
+        t.mesh.scale.set(pulse,pulse,1);
+        t.mesh.rotation.z += t.spin * dt * (t.type==='fire' ? 1.2 : 0.7);
+      }
+    }
+
+    // -----------------------------
+    // Round / UI
+    // -----------------------------
+    function caishenSVG(){
       return `
       <svg id="caishenSVG" viewBox="0 0 600 340" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -713,392 +691,245 @@
             <stop offset="1" stop-color="#b8860b"/>
           </linearGradient>
         </defs>
-
-        <!-- background -->
         <rect x="10" y="10" width="580" height="320" rx="26" fill="rgba(0,0,0,0.10)" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
         <circle cx="300" cy="150" r="120" fill="url(#g1)" opacity="0.95"/>
         <circle cx="300" cy="150" r="102" fill="none" stroke="url(#gold)" stroke-width="10"/>
-
-        <!-- hat -->
         <path d="M190 120 C240 40, 360 40, 410 120 Z" fill="url(#gold)"/>
         <rect x="215" y="112" width="170" height="18" rx="9" fill="#7a4d00" opacity="0.55"/>
-
-        <!-- face -->
         <circle cx="300" cy="165" r="72" fill="#ffd9b3"/>
         <circle cx="270" cy="155" r="10" fill="#1b0d00"/>
         <circle cx="330" cy="155" r="10" fill="#1b0d00"/>
         <path d="M275 190 C300 210, 325 210, 350 190" fill="none" stroke="#1b0d00" stroke-width="8" stroke-linecap="round"/>
-
-        <!-- beard -->
         <path d="M250 205 C265 250, 335 250, 350 205" fill="#fff" stroke="rgba(0,0,0,0.15)" stroke-width="2"/>
-
-        <!-- robe -->
         <path d="M170 310 C185 240, 245 220, 300 220 C355 220, 415 240, 430 310 Z" fill="url(#g1)" opacity="0.95"/>
         <path d="M210 310 C225 255, 265 245, 300 245 C335 245, 375 255, 390 310 Z" fill="none" stroke="url(#gold)" stroke-width="8"/>
-
-        <!-- ingot -->
         <path d="M250 255 C270 235, 330 235, 350 255 C340 285, 260 285, 250 255 Z" fill="url(#gold)"/>
-        <text x="300" y="272" text-anchor="middle" font-size="28" font-weight="900" fill="#7a4d00">财</text>
-
-        <!-- HUAT -->
-        <text x="300" y="70" text-anchor="middle" font-size="42" font-weight="950" fill="#ffd700" stroke="rgba(0,0,0,0.35)" stroke-width="3">HUAT AH!</text>
+        <text x="300" y="272" text-anchor="middle" font-size="28" font-weight="950" fill="#7a4d00">财</text>
+        <text x="300" y="70" text-anchor="middle" font-size="46" font-weight="950" fill="#ffd700" stroke="rgba(0,0,0,0.35)" stroke-width="3">HUAT AH!</text>
       </svg>`;
     }
 
-    function showMenu() {
-      roundActive = false;
-      overlay.style.display = 'flex';
+    function showWelcome(){
+      overlay.style.display='flex';
       panel.innerHTML = `
-        <h1>Ang Bao Shooter 🧧🪙🧨</h1>
-        <p>Round = <b>${ROUND_SECONDS}s</b>. Targets: 🪙 +$5 • 🧧 +$10 • 🧨 -$2</p>
-        <div class="btnRow">
-          <button class="btnLevel" data-level="easy">Easy (20) <small>Slow • Win = half of total possible payout</small></button>
-          <button class="btnLevel" data-level="mid">Mid (40) <small>Medium • Win = half of total possible payout</small></button>
-          <button class="btnLevel" data-level="hard">Hard (80) <small>Fast • Win = half of total possible payout</small></button>
-        </div>
-        <div id="tiny">Tip: Camping the center won’t work now — targets fly to random spots 😉</div>
+        <h1>Hi welcome to Coach Daniel Reaction Game</h1>
+        <p><b>How to shoot:</b><br/>
+        1) Make a <b>pistol</b> hand (index finger pointing, other fingers curled).<br/>
+        2) <b>Trigger</b>: tap thumb closer to your index knuckle.<br/>
+        3) Aim with your index finger. Targets move randomly — react fast!</p>
+        <p><b>Scoring:</b> 🧧 Ang Bao = <b>+$10</b> • 🧨 Firecracker = <b>-$5</b></p>
+        <button id="btnStart">Start (Enable Camera)</button>
+        <div id="tiny">Tip: Use Safari on iPhone. Allow camera. Keep good lighting.</div>
       `;
-      panel.querySelectorAll('.btnLevel').forEach(btn => {
-        btn.addEventListener('click', () => startRound(btn.dataset.level));
+      const btn = document.getElementById('btnStart');
+      btn.addEventListener('click', async ()=>{
+        try{
+          ensureAudio(); // unlock audio on iOS
+          btn.disabled=true;
+          btn.textContent='Starting…';
+          await startCameraAndHands();
+        }catch(e){
+          console.error(e);
+          btn.disabled=false;
+          btn.textContent='Start (Enable Camera)';
+          alert("Could not start camera/hands.\n\nMake sure you're on HTTPS (GitHub Pages) and allowed camera permission.");
+        }
       });
     }
 
-    function showResult(win) {
-      roundActive = false;
-      clearTargets();
-
-      const sub = `You scored <b>$${score}</b> • Goal ≥ <b>$${goalScore}</b><br/>Total possible payout (positive): <b>$${totalPositivePossible}</b>`;
-      panel.innerHTML = win ? `
-        <div id="resultTitle">YOU WIN 🧧💰</div>
-        <div id="resultSub">${sub}</div>
-        <div id="caishenWrap">${caishenSVG()}</div>
-        <button class="btnLevel" id="playAgain">Play Again</button>
-        <div id="tiny">Try harder level for more HUAT 😄</div>
-      ` : `
-        <div id="resultTitle">GAME OVER</div>
-        <div id="resultSub">${sub}</div>
-        <button class="btnLevel" id="playAgain">Try Again</button>
-        <div id="tiny">Tip: Aim for 🧧 and 🪙, avoid 🧨</div>
+    function showMenu(){
+      overlay.style.display='flex';
+      panel.innerHTML = `
+        <h1>Select Difficulty</h1>
+        <p>Round = <b>${ROUND_SECONDS}s</b> • Win = at least half of total Ang Bao targets (firecracker penalty does not reduce win minimum).</p>
+        <div class="btnRow">
+          <button class="btnLevel" data-lvl="easy">Easy (20 Ang Bao) <small style="display:block;opacity:.85;font-weight:700;margin-top:2px;">Slow • Win min = $100</small></button>
+          <button class="btnLevel" data-lvl="mid">Mid (40 Ang Bao) <small style="display:block;opacity:.85;font-weight:700;margin-top:2px;">Medium • Win min = $200</small></button>
+          <button class="btnLevel" data-lvl="hard">Hard (80 Ang Bao) <small style="display:block;opacity:.85;font-weight:700;margin-top:2px;">Fast • Win min = $400</small></button>
+        </div>
+        <div id="tiny">Targets are smaller + less aim assist = more reaction training 💪</div>
       `;
-      overlay.style.display = 'flex';
-      panel.querySelector('#playAgain').addEventListener('click', showMenu);
+      panel.querySelectorAll('.btnLevel').forEach(b=>{
+        b.addEventListener('click', ()=>startRound(b.dataset.lvl));
+      });
     }
 
-    function startRound(levelKey) {
-      selectedLevel = levelKey;
+    function showResult(win){
+      roundActive=false;
+      clearTargets();
+      overlay.style.display='flex';
 
-      // reset round stats
-      score = 0;
-      timeLeft = ROUND_SECONDS;
+      if(win){
+        panel.innerHTML = `
+          <div style="font-size:22px;font-weight:950;margin:0 0 6px;">YOU WIN 🧧💰</div>
+          <div style="font-size:13px;opacity:.92;margin:0 0 12px;">
+            Score: <b>$${score}</b><br/>
+            Win Min: <b>$${winMin}</b><br/>
+            Ang Bao Hits: <b>${angbaoHits}</b> / ${angbaoTotal}
+          </div>
+          <div id="caishenWrap">${caishenSVG()}</div>
+          <button id="playAgain">Play Again</button>
+          <div id="tiny">HUAT AH! 🎉</div>
+        `;
+      } else {
+        panel.innerHTML = `
+          <div style="font-size:22px;font-weight:950;margin:0 0 6px;">GAME OVER</div>
+          <div style="font-size:13px;opacity:.92;margin:0 0 12px;">
+            Score: <b>$${score}</b><br/>
+            Win Min: <b>$${winMin}</b><br/>
+            Ang Bao Hits: <b>${angbaoHits}</b> / ${angbaoTotal}
+          </div>
+          <button id="playAgain">Try Again</button>
+          <div id="tiny">Tip: Avoid 🧨, aim carefully, react fast.</div>
+        `;
+      }
 
-      totalSpawnLimit = LEVELS[selectedLevel].total;
-      spawned = 0;
+      document.getElementById('playAgain').addEventListener('click', showMenu);
+    }
 
-      totalPositivePossible = 0;
-      goalScore = 0;
+    function startRound(levelKey){
+      selectedLevel=levelKey;
 
-      scoreEl.textContent = `$0`;
-      timeEl.textContent = `${timeLeft}`;
-      goalEl.textContent = `$0`;
+      score=0;
+      angbaoHits=0;
+      angbaoSpawned=0;
+
+      timeLeft=ROUND_SECONDS;
+      scoreEl.textContent='$0';
+      timeEl.textContent=`${timeLeft}`;
+
+      angbaoTotal = LEVELS[selectedLevel].angbaoTotal;
+      // win minimum = half of angbaoTotal * $10
+      winMin = (Math.ceil(angbaoTotal/2) * SCORE_ANGBAO);
+      winMinEl.textContent = `$${winMin}`;
 
       clearTargets();
-      roundActive = true;
-      overlay.style.display = 'none';
+      roundActive=true;
+      overlay.style.display='none';
 
-      // pre-spawn enough to fill screen immediately
-      ensureOnScreen();
-
-      // compute goal after initial fills + ongoing spawns:
-      // We'll update goal after we reach the spawn limit (at end of round),
-      // but user needs a goal early. So we estimate:
-      // Use expected value based on probabilities:
-      const exp = TYPES.coin.value*TYPES.coin.prob + TYPES.angbao.value*TYPES.angbao.prob + Math.max(0,TYPES.firework.value)*TYPES.firework.prob;
-      const estTotal = Math.round(exp * totalSpawnLimit);
-      goalScore = Math.ceil(estTotal / 2);
-      goalEl.textContent = `$${goalScore}`;
+      ensureTargets();
     }
 
-    // timer tick
-    let timerAcc = 0;
-    function updateTimer(dt) {
-      if (!roundActive) return;
+    // Timer
+    let timerAcc=0;
+    function updateTimer(dt){
+      if(!roundActive) return;
       timerAcc += dt;
-      if (timerAcc >= 1) {
+      if(timerAcc >= 1){
         timerAcc = 0;
         timeLeft -= 1;
         timeEl.textContent = `${timeLeft}`;
-        if (timeLeft <= 0) {
-          // finalize goal using actual spawned positive possible
-          // (in case random distribution differs)
-          goalScore = Math.ceil(totalPositivePossible / 2);
-          goalEl.textContent = `$${goalScore}`;
-          showResult(score >= goalScore);
+        if(timeLeft <= 0){
+          // Win condition: MUST reach winMin (firecracker penalty already included in score)
+          showResult(score >= winMin);
         }
-      }
-    }
-
-    // -----------------------------
-    // Motion update (more random, less "to center")
-    // -----------------------------
-    function updateTargets(dt) {
-      for (const t of targets) {
-        if (!t.alive) continue;
-
-        // base motion
-        t.x += t.vx * dt;
-        t.y += t.vy * dt;
-
-        // wobble drift (curvy paths)
-        const age = (now() - t.born) / 1000;
-        t.x += Math.sin(age * t.wobbleF) * t.wobbleA * dt;
-        t.y += Math.cos(age * (t.wobbleF*0.9)) * (t.wobbleA*0.8) * dt;
-
-        // if off-screen too far, despawn and replace
-        if (t.x < -0.25 || t.x > 1.25 || t.y < -0.25 || t.y > 1.25) {
-          t.alive = false;
-          scene.remove(t.mesh);
-          ensureOnScreen();
-          continue;
-        }
-
-        // if reached near destination, "retarget" to make movement unpredictable
-        const d = Math.hypot(t.dest.x - t.x, t.dest.y - t.y);
-        if (d < 0.08) {
-          t.dest = { x: rand(0.05, 0.95), y: rand(0.12, 0.88) };
-          const base = LEVELS[selectedLevel].speed;
-          const speed = base * rand(0.85, 1.35);
-          const dx = t.dest.x - t.x;
-          const dy = t.dest.y - t.y;
-          const len = Math.max(0.0001, Math.hypot(dx,dy));
-          let vx = (dx/len) * speed;
-          let vy = (dy/len) * speed;
-          const lateral = rand(-0.10, 0.10) * base;
-          vx += - (dy/len) * lateral;
-          vy +=   (dx/len) * lateral;
-          t.vx = vx; t.vy = vy;
-        }
-
-        const w = worldFromNorm(t.x, t.y);
-        t.mesh.position.set(w.x, w.y, 0);
-
-        const pulse = 1 + 0.08 * Math.sin((now()*0.006) + t.x*10);
-        t.mesh.scale.set(pulse, pulse, 1);
-        t.mesh.rotation.z += t.spin * dt * 0.6;
       }
     }
 
     // -----------------------------
     // Resize
     // -----------------------------
-    function resize() {
-      W = window.innerWidth;
-      H = window.innerHeight;
-      renderer.setSize(W, H, false);
-
-      camera.left = -1; camera.right = 1; camera.top = 1; camera.bottom = -1;
+    function resize(){
+      W=window.innerWidth; H=window.innerHeight;
+      renderer.setSize(W,H,false);
+      camera.left=-1; camera.right=1; camera.top=1; camera.bottom=-1;
       camera.updateProjectionMatrix();
-
       setCrosshairDOM();
     }
-    window.addEventListener('resize', resize, { passive:true });
+    window.addEventListener('resize', resize, {passive:true});
     resize();
 
     // -----------------------------
-    // Loops
+    // Render loop
     // -----------------------------
-    let lastT = now();
-    function renderLoop() {
-      const t = now();
-      const dt = Math.min(0.033, (t - lastT) / 1000);
-      lastT = t;
+    let lastT=now();
+    function renderLoop(){
+      const t=now();
+      const dt=Math.min(0.033, (t-lastT)/1000);
+      lastT=t;
 
-      const g = updateGesture();
+      const g=updateGesture();
       applyAimAssist(g.aim, dt);
-      if (g.trigger) shoot();
+      if(g.trigger) shoot();
 
       setCrosshairDOM();
       updateLaser(g.aim);
 
-      if (roundActive) {
+      if(roundActive){
         updateTargets(dt);
-        ensureOnScreen();
+        ensureTargets();
         updateTimer(dt);
       }
 
-      renderer.render(scene, camera);
+      renderer.render(scene,camera);
       requestAnimationFrame(renderLoop);
     }
 
     // -----------------------------
-    // MediaPipe Hands (pinned + crash safe)
+    // MediaPipe Hands (pinned + crash-safe)
     // -----------------------------
-    async function startCameraAndHands() {
+    async function startCameraAndHands(){
       const stream = await navigator.mediaDevices.getUserMedia({
         audio:false,
         video:{ facingMode:"user", width:{ideal:1280}, height:{ideal:720} }
       });
-      video.srcObject = stream;
+      video.srcObject=stream;
       await video.play();
 
       hands = new Hands({
-        locateFile: (file) => `https://unpkg.com/@mediapipe/hands@0.4.1646424915/${file}`
+        locateFile:(file)=>`https://unpkg.com/@mediapipe/hands@0.4.1646424915/${file}`
       });
 
       hands.setOptions({
-        maxNumHands: 1,
-        modelComplexity: 1,
-        minDetectionConfidence: 0.6,
-        minTrackingConfidence: 0.6
+        maxNumHands:1,
+        modelComplexity:1,
+        minDetectionConfidence:0.6,
+        minTrackingConfidence:0.6
       });
 
-      hands.onResults((results) => {
-        try {
-          if (!modelReady) {
-            modelReady = true;
-            showMenu();
+      hands.onResults((results)=>{
+        try{
+          if(!modelReady){
+            modelReady=true;
+            showMenu(); // only enter menu after model is alive
           }
           const lms = results.multiHandLandmarks && results.multiHandLandmarks[0];
-          lastHand = lms ? { landmarks: lms } : null;
-        } catch (e) {
+          lastHand = lms ? {landmarks:lms} : null;
+        }catch(e){
           console.warn("onResults error:", e);
         }
       });
 
-      // drive send with throttling + try/catch
-      lastAi = 0;
-      async function aiLoop() {
-        try {
-          const t = now();
-          if (t - lastAi >= AI_DT && hands) {
-            lastAi = t;
-            await hands.send({ image: video });
+      // Throttled AI loop
+      lastAi=0;
+      async function aiLoop(){
+        try{
+          const t=now();
+          if(t-lastAi >= AI_DT && hands){
+            lastAi=t;
+            await hands.send({image:video});
           }
-        } catch (e) {
+        }catch(e){
           console.warn("AI loop protected error:", e);
-        } finally {
+        }finally{
           requestAnimationFrame(aiLoop);
         }
       }
       requestAnimationFrame(aiLoop);
+
       requestAnimationFrame(renderLoop);
     }
 
     // -----------------------------
-    // Gesture logic
+    // Boot
     // -----------------------------
-    function updateGesture() {
-      pistolActive = false;
-      let triggerNow = false;
-      let aimPoint = null;
-
-      if (!lastHand || !lastHand.landmarks || lastHand.landmarks.length < 21) {
-        prevTrigger = false;
-        return { pistol:false, trigger:false, aim:null };
-      }
-
-      const lm = lastHand.landmarks;
-
-      const indexExt  = isFingerExtended(lm, 8, 6, 5);
-      const middleCur = isFingerCurled(lm, 12, 10, 9);
-      const ringCur   = isFingerCurled(lm, 16, 14, 13);
-      const pinkyCur  = isFingerCurled(lm, 20, 18, 17);
-      pistolActive = indexExt && middleCur && ringCur && pinkyCur;
-
-      const idxTip = lm[8];
-      aimPoint = { x: 1 - idxTip.x, y: idxTip.y };
-
-      const thumbTip = lm[4];
-      const idxMCP = lm[5];
-      const a = { x: 1 - thumbTip.x, y: thumbTip.y };
-      const b = { x: 1 - idxMCP.x, y: idxMCP.y };
-      const d = dist2(a,b);
-      triggerNow = pistolActive && (d < 0.095);
-
-      const fired = triggerNow && !prevTrigger;
-      prevTrigger = triggerNow;
-
-      return { pistol:pistolActive, trigger:fired, aim:aimPoint };
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      overlay.style.display='flex';
+      panel.innerHTML = `<h1>Camera not supported</h1><p>This device/browser does not support camera access.</p>`;
+      return;
     }
 
-    function isFingerExtended(lm, tip, pip, mcp) {
-      const t = lm[tip], p = lm[pip], m = lm[mcp];
-      return (t.y < p.y) && (p.y < m.y);
-    }
-    function isFingerCurled(lm, tip, pip, mcp) {
-      const t = lm[tip], p = lm[pip], m = lm[mcp];
-      return (t.y > p.y) || (t.y > m.y);
-    }
-
-    // -----------------------------
-    // Aim assist & laser
-    // -----------------------------
-    function applyAimAssist(aim, dt) {
-      if (!aim) return;
-      cross.x = lerp(cross.x, aim.x, clamp(dt*10, 0, 1));
-      cross.y = lerp(cross.y, aim.y, clamp(dt*10, 0, 1));
-
-      let best = null;
-      let bestD = 999;
-      for (const t of targets) {
-        if (!t.alive) continue;
-        const dd = Math.hypot(t.x - cross.x, t.y - cross.y);
-        if (dd < bestD) { bestD = dd; best = t; }
-      }
-
-      const magnetR = 0.13;
-      if (best && bestD < magnetR) {
-        const k = (1 - (bestD / magnetR));
-        const snap = clamp(k * dt * 16, 0, 1);
-        cross.x = lerp(cross.x, best.x, snap);
-        cross.y = lerp(cross.y, best.y, snap);
-      }
-    }
-
-    function setCrosshairDOM() {
-      crosshair.style.left = `${cross.x * W}px`;
-      crosshair.style.top  = `${cross.y * H}px`;
-    }
-
-    function updateLaser(aim) {
-      if (!aim) { laserMat.opacity = 0.0; return; }
-      laserMat.opacity = pistolActive ? 0.90 : 0.25;
-      const a = worldFromNorm(aim.x, aim.y);
-      const b = worldFromNorm(cross.x, cross.y);
-      const pos = laserGeom.attributes.position.array;
-      pos[0]=a.x; pos[1]=a.y; pos[2]=0;
-      pos[3]=b.x; pos[4]=b.y; pos[5]=0;
-      laserGeom.attributes.position.needsUpdate = true;
-    }
-
-    // -----------------------------
-    // Boot UI
-    // -----------------------------
-    panel.innerHTML = `
-      <h1>Ang Bao Shooter 🧧🪙🧨</h1>
-      <p>Tap Start to enable camera + load the hand model.</p>
-      <button id="btnStart">Start (Enable Camera)</button>
-      <div id="tiny">After loading, choose Easy / Mid / Hard.</div>
-    `;
-    const startBtn = panel.querySelector('#btnStart');
-
-    startBtn.addEventListener('click', async () => {
-      try {
-        ensureAudio();
-        startBtn.disabled = true;
-        startBtn.textContent = "Starting…";
-        await startCameraAndHands();
-      } catch (e) {
-        console.error(e);
-        startBtn.disabled = false;
-        startBtn.textContent = "Start (Enable Camera)";
-        alert("Could not start camera/hands.\n\nMake sure you're on HTTPS (GitHub Pages) and allowed camera permission.");
-      }
-    });
-
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      startBtn.disabled = true;
-      startBtn.textContent = "Camera not supported";
-    }
+    showWelcome();
   })();
   </script>
 </body>
