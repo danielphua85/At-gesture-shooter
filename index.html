@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>AR Gesture Shooter (Mobile)</title>
+  <title>Ang Bao Gesture Shooter (Mobile)</title>
   <style>
     html, body { margin:0; padding:0; height:100%; background:#000; overflow:hidden; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
     #wrap { position:fixed; inset:0; }
@@ -11,7 +11,7 @@
       position:fixed; inset:0;
       width:100%; height:100%;
       object-fit:cover;
-      transform: scaleX(-1); /* selfie mirror feel */
+      transform: scaleX(-1);
       background:#000;
     }
     canvas { position:fixed; inset:0; width:100%; height:100%; }
@@ -20,9 +20,27 @@
       position:fixed; width:18px; height:18px;
       left:50%; top:50%;
       transform:translate(-50%,-50%);
-      border:2px solid rgba(0,255,255,0.9);
+      border:2px solid rgba(255,215,0,0.95);
       border-radius:50%;
-      box-shadow: 0 0 10px rgba(0,255,255,0.35);
+      box-shadow: 0 0 12px rgba(255,215,0,0.35);
+    }
+
+    #topbar{
+      position:fixed; left:0; right:0; top:0;
+      padding:10px 12px calc(10px + env(safe-area-inset-top));
+      display:flex; gap:10px; justify-content:space-between; align-items:center;
+      color:#fff; font-weight:700;
+      background:linear-gradient(to bottom, rgba(0,0,0,0.55), rgba(0,0,0,0.08));
+      border-bottom:1px solid rgba(255,255,255,0.10);
+      backdrop-filter: blur(10px);
+    }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,0.14);
+      background:rgba(0,0,0,0.25);
+      font-size:13px;
     }
     #hint {
       position:fixed; left:50%; bottom:14px;
@@ -41,14 +59,14 @@
       display:flex; align-items:center; justify-content:center;
       flex-direction:column;
       color:#fff;
-      background: radial-gradient(1200px 800px at 50% 40%, rgba(0,140,255,0.15), rgba(0,0,0,0.95));
+      background: radial-gradient(1200px 800px at 50% 40%, rgba(255,0,60,0.18), rgba(0,0,0,0.95));
       z-index:9999;
       text-align:center;
       padding:24px;
     }
-    #loading .card{
+    #panel {
       max-width:560px;
-      background:rgba(0,0,0,0.35);
+      background:rgba(0,0,0,0.38);
       border:1px solid rgba(255,255,255,0.12);
       border-radius:16px;
       padding:16px 18px;
@@ -56,35 +74,45 @@
     }
     #loading h1 { margin:0 0 8px; font-size:18px; }
     #loading p { margin:8px 0; font-size:13px; opacity:0.9; }
-    #btnStart {
-      margin-top:12px;
+
+    #btnStart, .btnLevel {
+      margin-top:10px;
       padding:12px 14px;
       border-radius:14px;
       border:1px solid rgba(255,255,255,0.18);
-      background:rgba(0,180,255,0.22);
+      background:rgba(255,215,0,0.18);
       color:#fff;
-      font-weight:600;
-      width:min(320px, 90vw);
+      font-weight:800;
+      width:min(360px, 90vw);
     }
-    #btnStart:active { transform: scale(0.99); }
+    .btnRow{ display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+    .btnLevel{ background:rgba(255,0,60,0.18); }
+    .btnLevel small{ font-weight:600; opacity:0.85; display:block; margin-top:2px; }
+    #btnStart:active, .btnLevel:active { transform: scale(0.99); }
+
     .floatText{
       position:fixed;
       left:50%; top:50%;
       transform:translate(-50%,-50%);
-      color:#fff; font-weight:800; letter-spacing:0.5px;
+      color:#fff; font-weight:900; letter-spacing:0.6px;
       text-shadow: 0 2px 14px rgba(0,0,0,0.65);
       pointer-events:none;
       will-change: transform, opacity;
     }
-    #small {
-      position:fixed; top:10px; left:10px;
-      color:rgba(255,255,255,0.8);
-      font-size:11px;
-      background:rgba(0,0,0,0.25);
-      border:1px solid rgba(255,255,255,0.12);
-      border-radius:10px;
-      padding:7px 9px;
-      backdrop-filter: blur(10px);
+
+    #resultTitle{
+      font-size:22px; font-weight:900; margin:0 0 6px;
+    }
+    #resultSub{
+      font-size:13px; opacity:0.9; margin:0 0 12px;
+    }
+    #caishen{
+      font-size:52px; line-height:1; margin:8px 0;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,0.6));
+    }
+    #tiny{
+      margin-top:8px;
+      font-size:11px; opacity:0.75;
     }
   </style>
 </head>
@@ -95,18 +123,28 @@
     <canvas id="gl"></canvas>
 
     <div id="hud">
+      <div id="topbar">
+        <div class="pill">💰 Score: <span id="score">$0</span></div>
+        <div class="pill">⏱️ Time: <span id="time">60</span>s</div>
+        <div class="pill">🎯 Target: <span id="target">$0</span></div>
+      </div>
       <div id="crosshair"></div>
-      <div id="small">AI: <span id="aiFps">0</span> fps • Render: <span id="rFps">0</span> fps</div>
       <div id="hint">Make a <b>pistol</b> hand (index out, other fingers curled). “Trigger” by tapping thumb closer to index knuckle to shoot.</div>
     </div>
 
     <div id="loading">
-      <div class="card">
-        <h1>Loading AR Gesture Shooter…</h1>
-        <p>We need camera permission and to download the hand model (MediaPipe Hands).</p>
-        <p><b>If prompted:</b> tap <b>Allow Camera</b>. Keep good lighting.</p>
-        <button id="btnStart">Start (Enable Camera)</button>
-        <p style="opacity:0.7; margin-top:10px;">Tip: On iPhone, use Safari / Chrome and keep the phone steady for best tracking.</p>
+      <div id="panel">
+        <h1>Ang Bao Shooter 🧧</h1>
+        <p>Choose a difficulty. We need camera permission and to download the hand model.</p>
+
+        <div class="btnRow">
+          <button class="btnLevel" data-level="easy">Easy 🧧 x20 <small>Slow targets • Win ≥ 10 hits • $10 per hit</small></button>
+          <button class="btnLevel" data-level="mid">Mid 🧧 x40 <small>Medium speed • Win ≥ 20 hits</small></button>
+          <button class="btnLevel" data-level="hard">Hard 🧧 x80 <small>Fast speed • Win ≥ 40 hits</small></button>
+        </div>
+
+        <button id="btnStart" style="display:none;">Start (Enable Camera)</button>
+        <div id="tiny">Tip: Use Safari on iPhone for best camera permission reliability.</div>
       </div>
     </div>
   </div>
@@ -126,15 +164,16 @@
     // -----------------------------
     const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
     const lerp  = (a, b, t) => a + (b - a) * t;
-
-    function now() { return performance.now(); }
+    const now = () => performance.now();
 
     function dist2(a, b) {
       const dx = a.x - b.x, dy = a.y - b.y;
       return Math.sqrt(dx*dx + dy*dy);
     }
 
-    // Simple WebAudio "pew" + hit sound (no asset files needed)
+    // -----------------------------
+    // Audio (no external files)
+    // -----------------------------
     let audioCtx = null;
     function ensureAudio() {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -152,23 +191,35 @@
       g.gain.exponentialRampToValueAtTime(0.12, t + 0.01);
       g.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
       o.connect(g).connect(audioCtx.destination);
-      o.start(t);
-      o.stop(t + 0.10);
+      o.start(t); o.stop(t + 0.10);
     }
-    function sfxHit() {
+    // "Cash/coin" hit sound
+    function sfxCash() {
       if (!audioCtx) return;
       const t = audioCtx.currentTime;
-      const o = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      o.type = 'sine';
-      o.frequency.setValueAtTime(880, t);
-      o.frequency.exponentialRampToValueAtTime(220, t + 0.12);
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.18, t + 0.01);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
-      o.connect(g).connect(audioCtx.destination);
-      o.start(t);
-      o.stop(t + 0.15);
+
+      // metallic ping
+      const o1 = audioCtx.createOscillator();
+      const g1 = audioCtx.createGain();
+      o1.type = 'sine';
+      o1.frequency.setValueAtTime(1200, t);
+      o1.frequency.exponentialRampToValueAtTime(600, t + 0.10);
+      g1.gain.setValueAtTime(0.0001, t);
+      g1.gain.exponentialRampToValueAtTime(0.18, t + 0.01);
+      g1.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
+      o1.connect(g1).connect(audioCtx.destination);
+      o1.start(t); o1.stop(t + 0.15);
+
+      // short click
+      const o2 = audioCtx.createOscillator();
+      const g2 = audioCtx.createGain();
+      o2.type = 'triangle';
+      o2.frequency.setValueAtTime(200, t);
+      g2.gain.setValueAtTime(0.0001, t);
+      g2.gain.exponentialRampToValueAtTime(0.08, t + 0.005);
+      g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
+      o2.connect(g2).connect(audioCtx.destination);
+      o2.start(t); o2.stop(t + 0.07);
     }
     function sfxMiss() {
       if (!audioCtx) return;
@@ -182,8 +233,7 @@
       g.gain.exponentialRampToValueAtTime(0.08, t + 0.01);
       g.gain.exponentialRampToValueAtTime(0.0001, t + 0.13);
       o.connect(g).connect(audioCtx.destination);
-      o.start(t);
-      o.stop(t + 0.14);
+      o.start(t); o.stop(t + 0.14);
     }
 
     function floatText(text, x, y, good=true) {
@@ -193,11 +243,11 @@
       el.style.left = `${x}px`;
       el.style.top  = `${y}px`;
       el.style.fontSize = '22px';
-      el.style.color = good ? 'rgba(90,255,210,1)' : 'rgba(255,120,120,1)';
+      el.style.color = good ? 'rgba(255,215,0,1)' : 'rgba(255,120,120,1)';
       document.body.appendChild(el);
 
       const start = now();
-      const dur = 650;
+      const dur = 700;
       const y0 = y;
       function tick() {
         const t = (now() - start) / dur;
@@ -218,111 +268,180 @@
     const canvas = document.getElementById('gl');
     const loading = document.getElementById('loading');
     const btnStart = document.getElementById('btnStart');
+    const levelBtns = [...document.querySelectorAll('.btnLevel')];
+
+    const scoreEl = document.getElementById('score');
+    const timeEl  = document.getElementById('time');
+    const targetEl= document.getElementById('target');
     const crosshair = document.getElementById('crosshair');
-    const aiFpsEl = document.getElementById('aiFps');
-    const rFpsEl  = document.getElementById('rFps');
 
     // -----------------------------
-    // Three.js setup (2D-ish AR overlay)
+    // Game settings
+    // -----------------------------
+    const LEVELS = {
+      easy: { total: 20, speed: 0.10 },
+      mid:  { total: 40, speed: 0.15 },
+      hard: { total: 80, speed: 0.22 },
+    };
+
+    let selectedLevel = null;
+
+    const ROUND_SECONDS = 60;
+    const SCORE_PER_HIT = 10;
+
+    let roundActive = false;
+    let timeLeft = ROUND_SECONDS;
+    let score = 0;
+    let hits = 0;
+    let totalTargets = 0;
+    let winHitsNeeded = 0;
+
+    // -----------------------------
+    // Three.js
     // -----------------------------
     const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
     renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
     const scene = new THREE.Scene();
 
-    // Orthographic camera for screen-space world
     let W = 1, H = 1;
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -10, 10);
     camera.position.z = 5;
-
-    // Crosshair world position (for aim assist snapping)
-    const cross = { x: 0.5, y: 0.5 }; // normalized screen coords
 
     // Laser line
     const laserGeom = new THREE.BufferGeometry();
     const laserVerts = new Float32Array(6);
     laserGeom.setAttribute('position', new THREE.BufferAttribute(laserVerts, 3));
-    const laserMat = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent:true, opacity:0.8 });
+    const laserMat = new THREE.LineBasicMaterial({ color: 0xffd700, transparent:true, opacity:0.85 });
     const laserLine = new THREE.Line(laserGeom, laserMat);
     scene.add(laserLine);
 
-    // Discs (flying enemies)
-    const discs = [];
-    const DISC_COUNT = 4;
+    // Ang Bao targets
+    const targets = [];
+    const ON_SCREEN = 4;
 
-    function makeDiscMesh() {
-      const g = new THREE.CircleGeometry(0.07, 32);
-      const m = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent:true, opacity:0.85 });
-      const mesh = new THREE.Mesh(g, m);
+    function makeAngBaoTexture() {
+      const c = document.createElement('canvas');
+      c.width = 256; c.height = 256;
+      const ctx = c.getContext('2d');
 
-      // glow ring
-      const rg = new THREE.RingGeometry(0.075, 0.095, 40);
-      const rm = new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent:true, opacity:0.55, side:THREE.DoubleSide });
-      const ring = new THREE.Mesh(rg, rm);
-      mesh.add(ring);
+      // background red gradient
+      const g = ctx.createLinearGradient(0,0,256,256);
+      g.addColorStop(0, '#ff2a2a');
+      g.addColorStop(1, '#b9002a');
+      ctx.fillStyle = g;
+      ctx.fillRect(0,0,256,256);
 
-      scene.add(mesh);
-      return { mesh, ring };
+      // gold border
+      ctx.strokeStyle = '#ffd700';
+      ctx.lineWidth = 12;
+      ctx.strokeRect(16,16,224,224);
+
+      // inner border
+      ctx.globalAlpha = 0.85;
+      ctx.lineWidth = 6;
+      ctx.strokeRect(32,32,192,192);
+      ctx.globalAlpha = 1;
+
+      // 福 character style (simple)
+      ctx.fillStyle = '#ffd700';
+      ctx.font = 'bold 140px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('福', 128, 132);
+
+      // tiny sparkle dots
+      ctx.globalAlpha = 0.55;
+      for (let i=0;i<14;i++){
+        ctx.beginPath();
+        ctx.arc(Math.random()*256, Math.random()*256, 2+Math.random()*3, 0, Math.PI*2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.needsUpdate = true;
+      return tex;
     }
 
-    function spawnDisc() {
-      // Spawn around edges (normalized 0..1)
+    const angBaoTex = makeAngBaoTexture();
+
+    function makeTargetMesh() {
+      const w = 0.16, h = 0.20; // world-ish size
+      const geom = new THREE.PlaneGeometry(w, h);
+
+      const mat = new THREE.MeshBasicMaterial({
+        map: angBaoTex,
+        transparent: true,
+        opacity: 0.95
+      });
+      const mesh = new THREE.Mesh(geom, mat);
+      scene.add(mesh);
+      return mesh;
+    }
+
+    function spawnTarget() {
       const edge = Math.floor(Math.random()*4);
       let x, y;
-      const pad = 0.08;
+      const pad = 0.10;
       if (edge === 0) { x = Math.random(); y = -pad; }
       if (edge === 1) { x = 1+pad; y = Math.random(); }
       if (edge === 2) { x = Math.random(); y = 1+pad; }
       if (edge === 3) { x = -pad; y = Math.random(); }
 
-      const { mesh } = makeDiscMesh();
+      const mesh = makeTargetMesh();
 
-      // velocity towards center with some noise
       const cx = 0.5, cy = 0.5;
       const dx = (cx - x) + (Math.random()-0.5)*0.12;
       const dy = (cy - y) + (Math.random()-0.5)*0.12;
       const len = Math.max(0.0001, Math.hypot(dx, dy));
-      const speed = 0.12 + Math.random()*0.10; // normalized per second
+
+      // speed based on difficulty
+      const base = (LEVELS[selectedLevel]?.speed ?? 0.12);
+      const speed = base + (Math.random()*base*0.35);
+
       const vx = (dx/len) * speed;
       const vy = (dy/len) * speed;
 
-      const d = {
+      const t = {
         mesh,
         x, y,
         vx, vy,
-        r: 0.08,
+        r: 0.12, // hit radius in normalized screen space
         alive: true
       };
-      discs.push(d);
-      return d;
+      targets.push(t);
+      return t;
     }
 
-    function ensureDiscCount() {
-      while (discs.filter(d=>d.alive).length < DISC_COUNT) spawnDisc();
+    function clearTargets() {
+      for (const t of targets) {
+        if (t.mesh) scene.remove(t.mesh);
+      }
+      targets.length = 0;
+    }
+
+    function ensureTargetCount() {
+      if (!roundActive) return;
+      while (targets.filter(t=>t.alive).length < ON_SCREEN) spawnTarget();
     }
 
     // -----------------------------
-    // Gesture + aiming state
+    // Aim & gesture
     // -----------------------------
+    const cross = { x: 0.5, y: 0.5 };
+
     let hands = null;
-    let cameraFeed = null;
     let modelReady = false;
-
-    // Throttle AI detection (keep rendering at 60fps)
-    const AI_HZ = 15;  // detection frequency
-    const AI_DT = 1000 / AI_HZ;
-    let lastAi = 0;
-    let aiFrames = 0, aiLastFpsT = 0;
-
-    // Render FPS display
-    let rFrames = 0, rLastFpsT = 0;
-
-    // Hand tracking output
-    let lastHand = null; // store landmarks + handedness
+    let lastHand = null;
     let pistolActive = false;
     let prevTrigger = false;
 
+    // throttle AI
+    const AI_HZ = 15;
+    const AI_DT = 1000 / AI_HZ;
+    let lastAi = 0;
+
     function isFingerExtended(lm, tip, pip, mcp) {
-      // in mirrored selfie: use y-distance as quick heuristic (tip above pip above mcp)
       const t = lm[tip], p = lm[pip], m = lm[mcp];
       return (t.y < p.y) && (p.y < m.y);
     }
@@ -334,7 +453,7 @@
     function updateGesture() {
       pistolActive = false;
       let triggerNow = false;
-      let aimPoint = null; // normalized x,y (0..1)
+      let aimPoint = null;
 
       if (!lastHand || !lastHand.landmarks || lastHand.landmarks.length < 21) {
         prevTrigger = false;
@@ -342,119 +461,195 @@
       }
 
       const lm = lastHand.landmarks;
-
-      // Finger extension test
       const indexExt  = isFingerExtended(lm, 8, 6, 5);
       const middleCur = isFingerCurled(lm, 12, 10, 9);
       const ringCur   = isFingerCurled(lm, 16, 14, 13);
       const pinkyCur  = isFingerCurled(lm, 20, 18, 17);
 
-      // pistol if index out + others curled
       pistolActive = indexExt && middleCur && ringCur && pinkyCur;
 
-      // Aim point = index tip (mirrored)
       const idxTip = lm[8];
-      aimPoint = { x: 1 - idxTip.x, y: idxTip.y }; // mirror x for our mirrored video
+      aimPoint = { x: 1 - idxTip.x, y: idxTip.y };
 
-      // Trigger = thumb tip near index MCP (pinch-ish)
+      // trigger threshold (slightly forgiving)
       const thumbTip = lm[4];
       const idxMCP = lm[5];
       const a = { x: 1 - thumbTip.x, y: thumbTip.y };
       const b = { x: 1 - idxMCP.x, y: idxMCP.y };
       const d = dist2(a,b);
-      triggerNow = pistolActive && (d < 0.09); // threshold tuned for mobile
+      triggerNow = pistolActive && (d < 0.095);
 
-      // Rising edge detection
       const fired = triggerNow && !prevTrigger;
       prevTrigger = triggerNow;
 
       return { pistol:pistolActive, trigger:fired, aim:aimPoint };
     }
 
-    // Aim assist: snap crosshair toward nearest disc along aimPoint direction
     function applyAimAssist(aim, dt) {
       if (!aim) return;
 
-      // baseline crosshair follows aim smoothly
       cross.x = lerp(cross.x, aim.x, clamp(dt*10, 0, 1));
       cross.y = lerp(cross.y, aim.y, clamp(dt*10, 0, 1));
 
-      // find nearest disc in screen space
       let best = null;
       let bestD = 999;
-      for (const d of discs) {
-        if (!d.alive) continue;
-        const dd = Math.hypot(d.x - cross.x, d.y - cross.y);
-        if (dd < bestD) { bestD = dd; best = d; }
+      for (const t of targets) {
+        if (!t.alive) continue;
+        const dd = Math.hypot(t.x - cross.x, t.y - cross.y);
+        if (dd < bestD) { bestD = dd; best = t; }
       }
 
-      // if within magnet radius, snap toward disc
-      const magnetR = 0.14;
+      const magnetR = 0.16;
       if (best && bestD < magnetR) {
-        const t = (1 - (bestD / magnetR));
-        const snap = clamp(t * dt * 18, 0, 1);
+        const k = (1 - (bestD / magnetR));
+        const snap = clamp(k * dt * 18, 0, 1);
         cross.x = lerp(cross.x, best.x, snap);
         cross.y = lerp(cross.y, best.y, snap);
       }
     }
 
     function setCrosshairDOM() {
-      // position DOM crosshair
-      const px = cross.x * W;
-      const py = cross.y * H;
-      crosshair.style.left = `${px}px`;
-      crosshair.style.top  = `${py}px`;
+      crosshair.style.left = `${cross.x * W}px`;
+      crosshair.style.top  = `${cross.y * H}px`;
     }
 
     function worldFromNorm(nx, ny) {
-      // map normalized [0..1] to ortho world coordinates
       const wx = (nx - 0.5) * 2;
       const wy = (0.5 - ny) * 2;
       return { x: wx, y: wy };
     }
 
     function updateLaser(aim) {
-      // If no hand, hide laser
-      if (!aim) {
-        laserMat.opacity = 0.0;
-        return;
-      }
-      laserMat.opacity = pistolActive ? 0.85 : 0.25;
+      if (!aim) { laserMat.opacity = 0.0; return; }
+      laserMat.opacity = pistolActive ? 0.90 : 0.25;
 
       const a = worldFromNorm(aim.x, aim.y);
-      const b = worldFromNorm(cross.x, cross.y); // laser ends where crosshair is (snapped)
+      const b = worldFromNorm(cross.x, cross.y);
       const pos = laserGeom.attributes.position.array;
-      pos[0] = a.x; pos[1] = a.y; pos[2] = 0;
-      pos[3] = b.x; pos[4] = b.y; pos[5] = 0;
+      pos[0]=a.x; pos[1]=a.y; pos[2]=0;
+      pos[3]=b.x; pos[4]=b.y; pos[5]=0;
       laserGeom.attributes.position.needsUpdate = true;
     }
 
     function shoot() {
+      if (!roundActive) return;
       ensureAudio();
       sfxShoot();
 
-      // hit test against discs near crosshair
-      let hitDisc = null;
+      let hitT = null;
       let bestD = 999;
-      for (const d of discs) {
-        if (!d.alive) continue;
-        const dd = Math.hypot(d.x - cross.x, d.y - cross.y);
-        if (dd < bestD) { bestD = dd; hitDisc = d; }
+      for (const t of targets) {
+        if (!t.alive) continue;
+        const dd = Math.hypot(t.x - cross.x, t.y - cross.y);
+        if (dd < bestD) { bestD = dd; hitT = t; }
       }
 
-      const hit = hitDisc && bestD < hitDisc.r;
       const px = cross.x * W, py = cross.y * H;
 
-      if (hit) {
-        hitDisc.alive = false;
-        scene.remove(hitDisc.mesh);
-        sfxHit();
-        floatText("HIT", px, py, true);
-        // spawn replacement immediately
-        ensureDiscCount();
+      if (hitT && bestD < hitT.r) {
+        hitT.alive = false;
+        scene.remove(hitT.mesh);
+
+        hits += 1;
+        score += SCORE_PER_HIT;
+        scoreEl.textContent = `$${score}`;
+
+        sfxCash();
+        floatText("+$10", px, py, true);
+
+        ensureTargetCount();
       } else {
         sfxMiss();
         floatText("MISS", px, py, false);
+      }
+    }
+
+    // -----------------------------
+    // Round control + end screen
+    // -----------------------------
+    function showMenu() {
+      roundActive = false;
+      loading.style.display = 'flex';
+
+      // swap panel to menu
+      const panel = document.getElementById('panel');
+      panel.innerHTML = `
+        <h1>Ang Bao Shooter 🧧</h1>
+        <p>Select a difficulty. Round = <b>${ROUND_SECONDS}s</b>. Each hit = <b>$${SCORE_PER_HIT}</b>.</p>
+        <div class="btnRow">
+          <button class="btnLevel" data-level="easy">Easy 🧧 x20 <small>Slow • Win ≥ 10 hits • Target $200</small></button>
+          <button class="btnLevel" data-level="mid">Mid 🧧 x40 <small>Medium • Win ≥ 20 hits • Target $400</small></button>
+          <button class="btnLevel" data-level="hard">Hard 🧧 x80 <small>Fast • Win ≥ 40 hits • Target $800</small></button>
+        </div>
+        <div id="tiny">Tip: Keep your hand steady and within good lighting.</div>
+      `;
+
+      [...panel.querySelectorAll('.btnLevel')].forEach(btn => {
+        btn.addEventListener('click', () => startRound(btn.dataset.level));
+      });
+    }
+
+    function showResult(win) {
+      roundActive = false;
+      clearTargets();
+
+      const panel = document.getElementById('panel');
+      const targetMoney = totalTargets * SCORE_PER_HIT;
+      const needMoney = winHitsNeeded * SCORE_PER_HIT;
+
+      panel.innerHTML = win ? `
+        <div id="resultTitle">YOU WIN! 🧧💰</div>
+        <div id="resultSub">You scored <b>$${score}</b> (Need ≥ <b>$${needMoney}</b>). 财神爷 is happy!</div>
+        <div id="caishen">🧧🧧 财神爷 🧧🧧</div>
+        <div style="font-size:28px; font-weight:900; margin:6px 0 10px; color:#ffd700;">HUAT AH!</div>
+        <button class="btnLevel" id="playAgain">Play Again</button>
+        <div id="tiny">Difficulty: ${selectedLevel.toUpperCase()} • Total possible: $${targetMoney}</div>
+      ` : `
+        <div id="resultTitle">GAME OVER</div>
+        <div id="resultSub">You scored <b>$${score}</b>. Need ≥ <b>$${needMoney}</b> to win.</div>
+        <button class="btnLevel" id="playAgain">Try Again</button>
+        <div id="tiny">Difficulty: ${selectedLevel.toUpperCase()} • Total possible: $${targetMoney}</div>
+      `;
+
+      loading.style.display = 'flex';
+      panel.querySelector('#playAgain').addEventListener('click', showMenu);
+    }
+
+    function startRound(levelKey) {
+      selectedLevel = levelKey;
+
+      // init targets + scoreboard
+      totalTargets = LEVELS[selectedLevel].total;
+      winHitsNeeded = Math.ceil(totalTargets / 2);
+
+      score = 0;
+      hits = 0;
+      timeLeft = ROUND_SECONDS;
+
+      scoreEl.textContent = `$0`;
+      timeEl.textContent = `${timeLeft}`;
+      targetEl.textContent = `$${totalTargets * SCORE_PER_HIT}`;
+
+      clearTargets();
+      roundActive = true;
+      loading.style.display = 'none';
+
+      ensureTargetCount();
+    }
+
+    // timer tick
+    let timerAcc = 0;
+    function updateTimer(dt) {
+      if (!roundActive) return;
+      timerAcc += dt;
+      if (timerAcc >= 1) {
+        timerAcc = 0;
+        timeLeft -= 1;
+        timeEl.textContent = `${timeLeft}`;
+        if (timeLeft <= 0) {
+          const win = hits >= winHitsNeeded;
+          showResult(win);
+        }
       }
     }
 
@@ -466,44 +661,44 @@
       H = window.innerHeight;
       renderer.setSize(W, H, false);
 
-      // Keep ortho camera fixed in [-1..1]
       camera.left = -1; camera.right = 1; camera.top = 1; camera.bottom = -1;
       camera.updateProjectionMatrix();
+
       setCrosshairDOM();
     }
     window.addEventListener('resize', resize, { passive:true });
     resize();
 
     // -----------------------------
-    // Game loop
+    // Main loop
     // -----------------------------
     let lastT = now();
-
     function update(dt) {
-      // move discs
-      for (const d of discs) {
-        if (!d.alive) continue;
-        d.x += d.vx * dt;
-        d.y += d.vy * dt;
+      // move targets
+      for (const t of targets) {
+        if (!t.alive) continue;
+        t.x += t.vx * dt;
+        t.y += t.vy * dt;
 
-        // if it reaches near center, respawn (avoid clutter)
-        const centerDist = Math.hypot(d.x - 0.5, d.y - 0.5);
+        // if reaches center, respawn (keeps action going)
+        const centerDist = Math.hypot(t.x - 0.5, t.y - 0.5);
         if (centerDist < 0.06) {
-          d.alive = false;
-          scene.remove(d.mesh);
-          ensureDiscCount();
+          t.alive = false;
+          scene.remove(t.mesh);
+          ensureTargetCount();
         }
       }
 
-      // update disc mesh positions
-      for (const d of discs) {
-        if (!d.alive) continue;
-        const w = worldFromNorm(d.x, d.y);
-        d.mesh.position.set(w.x, w.y, 0);
+      // update mesh positions
+      for (const t of targets) {
+        if (!t.alive) continue;
+        const w = worldFromNorm(t.x, t.y);
+        t.mesh.position.set(w.x, w.y, 0);
 
-        // slight pulsation
-        const pulse = 1 + 0.08 * Math.sin((now()*0.006) + d.x*9);
-        d.mesh.scale.setScalar(pulse);
+        // subtle wobble
+        const pulse = 1 + 0.08 * Math.sin((now()*0.006) + t.x*10);
+        t.mesh.scale.set(pulse, pulse, 1);
+        t.mesh.rotation.z = 0.08 * Math.sin((now()*0.004) + t.y*8);
       }
     }
 
@@ -512,45 +707,27 @@
       const dt = Math.min(0.033, (t - lastT) / 1000);
       lastT = t;
 
-      // update gesture state from latest results (cheap)
       const g = updateGesture();
-
-      // aim assist uses last known aim point
       applyAimAssist(g.aim, dt);
 
-      // shoot on trigger
       if (g.trigger) shoot();
 
-      // update visuals
       setCrosshairDOM();
       updateLaser(g.aim);
 
-      // update discs
-      update(dt);
-
-      // render
-      renderer.render(scene, camera);
-
-      // fps counters
-      rFrames++;
-      if (!rLastFpsT) rLastFpsT = t;
-      if (t - rLastFpsT > 500) {
-        const fps = Math.round((rFrames * 1000) / (t - rLastFpsT));
-        rFpsEl.textContent = fps;
-        rFrames = 0;
-        rLastFpsT = t;
+      if (roundActive) {
+        update(dt);
+        updateTimer(dt);
       }
 
+      renderer.render(scene, camera);
       requestAnimationFrame(renderLoop);
     }
 
     // -----------------------------
-    // MediaPipe Hands setup (crash-safe + pinned assets)
+    // MediaPipe Hands (version pinned + crash safe)
     // -----------------------------
     async function startCameraAndHands() {
-      ensureDiscCount();
-
-      // Ask for camera (prefer rear? actually front is better for hands; we use user-facing)
       const stream = await navigator.mediaDevices.getUserMedia({
         audio:false,
         video:{
@@ -563,10 +740,7 @@
       await video.play();
 
       hands = new Hands({
-        locateFile: (file) => {
-          // CRITICAL: resources pinned via unpkg to avoid WASM mismatch
-          return `https://unpkg.com/@mediapipe/hands@0.4.1646424915/${file}`;
-        }
+        locateFile: (file) => `https://unpkg.com/@mediapipe/hands@0.4.1646424915/${file}`
       });
 
       hands.setOptions({
@@ -579,44 +753,26 @@
       hands.onResults((results) => {
         try {
           if (!modelReady) {
-            // First successful results = model pipeline active
             modelReady = true;
-            loading.style.display = 'none';
+            // show menu once model is alive
+            showMenu();
           }
           const lms = results.multiHandLandmarks && results.multiHandLandmarks[0];
-          const handed = results.multiHandedness && results.multiHandedness[0];
-          if (lms) {
-            lastHand = { landmarks: lms, handedness: handed ? handed.label : null };
-          } else {
-            lastHand = null;
-          }
+          if (lms) lastHand = { landmarks: lms };
+          else lastHand = null;
         } catch (e) {
-          // Never crash from onResults
           console.warn("onResults error:", e);
         }
       });
 
-      // Instead of MediaPipe Camera() helper (sometimes flaky on mobile),
-      // we drive hands.send ourselves with throttling.
-      aiLastFpsT = now();
+      // drive send with throttling + try/catch
       lastAi = 0;
-
       async function aiLoop() {
         try {
           const t = now();
           if (t - lastAi >= AI_DT && hands) {
             lastAi = t;
-            // IMPORTANT: wrap in try/catch to avoid hard crashes
             await hands.send({ image: video });
-
-            // ai fps display
-            aiFrames++;
-            if (t - aiLastFpsT > 700) {
-              const fps = Math.round((aiFrames * 1000) / (t - aiLastFpsT));
-              aiFpsEl.textContent = fps;
-              aiFrames = 0;
-              aiLastFpsT = t;
-            }
           }
         } catch (e) {
           console.warn("AI loop protected error:", e);
@@ -626,31 +782,38 @@
       }
       requestAnimationFrame(aiLoop);
 
-      // Start render loop (60fps)
       requestAnimationFrame(renderLoop);
     }
 
     // -----------------------------
-    // Start button (also unlocks audio on mobile)
+    // Boot: first show a "tap to start camera" screen (iOS needs gesture)
     // -----------------------------
-    btnStart.addEventListener('click', async () => {
+    const panel = document.getElementById('panel');
+    panel.innerHTML = `
+      <h1>Ang Bao Shooter 🧧</h1>
+      <p>Tap Start to enable camera and load the hand model.</p>
+      <button id="btnStart">Start (Enable Camera)</button>
+      <div id="tiny">After loading, you can select Easy / Mid / Hard.</div>
+    `;
+    const startBtn = panel.querySelector('#btnStart');
+
+    startBtn.addEventListener('click', async () => {
       try {
-        ensureAudio(); // unlock audio on iOS (must be on a gesture)
-        btnStart.disabled = true;
-        btnStart.textContent = "Starting…";
+        ensureAudio(); // unlock audio on iOS
+        startBtn.disabled = true;
+        startBtn.textContent = "Starting…";
         await startCameraAndHands();
       } catch (e) {
         console.error(e);
-        btnStart.disabled = false;
-        btnStart.textContent = "Start (Enable Camera)";
-        alert("Could not start camera/hands.\n\nMake sure you're on HTTPS (GitHub Pages) and you allowed camera permission.");
+        startBtn.disabled = false;
+        startBtn.textContent = "Start (Enable Camera)";
+        alert("Could not start camera/hands.\n\nMake sure you're on HTTPS (GitHub Pages) and allowed camera permission.");
       }
     });
 
-    // If browser doesn’t support camera
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      btnStart.disabled = true;
-      btnStart.textContent = "Camera not supported";
+      startBtn.disabled = true;
+      startBtn.textContent = "Camera not supported";
     }
   })();
   </script>
