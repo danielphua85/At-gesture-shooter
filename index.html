@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Ang Bao Gesture Shooter (Mobile)</title>
+  <title>Ang Bao Shooter (v3)</title>
   <style>
     html, body { margin:0; padding:0; height:100%; background:#000; overflow:hidden; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
     #wrap { position:fixed; inset:0; }
@@ -16,6 +16,7 @@
     }
     canvas { position:fixed; inset:0; width:100%; height:100%; }
     #hud { position:fixed; inset:0; pointer-events:none; }
+
     #crosshair {
       position:fixed; width:18px; height:18px;
       left:50%; top:50%;
@@ -29,8 +30,8 @@
       position:fixed; left:0; right:0; top:0;
       padding:10px 12px calc(10px + env(safe-area-inset-top));
       display:flex; gap:10px; justify-content:space-between; align-items:center;
-      color:#fff; font-weight:700;
-      background:linear-gradient(to bottom, rgba(0,0,0,0.55), rgba(0,0,0,0.08));
+      color:#fff; font-weight:800;
+      background:linear-gradient(to bottom, rgba(0,0,0,0.60), rgba(0,0,0,0.10));
       border-bottom:1px solid rgba(255,255,255,0.10);
       backdrop-filter: blur(10px);
     }
@@ -41,7 +42,9 @@
       border:1px solid rgba(255,255,255,0.14);
       background:rgba(0,0,0,0.25);
       font-size:13px;
+      white-space:nowrap;
     }
+
     #hint {
       position:fixed; left:50%; bottom:14px;
       transform:translateX(-50%);
@@ -54,7 +57,8 @@
       max-width:min(92vw, 520px);
       text-align:center;
     }
-    #loading {
+
+    #overlay {
       position:fixed; inset:0;
       display:flex; align-items:center; justify-content:center;
       flex-direction:column;
@@ -72,48 +76,52 @@
       padding:16px 18px;
       backdrop-filter: blur(10px);
     }
-    #loading h1 { margin:0 0 8px; font-size:18px; }
-    #loading p { margin:8px 0; font-size:13px; opacity:0.9; }
+    #panel h1 { margin:0 0 8px; font-size:18px; }
+    #panel p { margin:8px 0; font-size:13px; opacity:0.9; }
 
-    #btnStart, .btnLevel {
+    .btnLevel, #btnStart {
       margin-top:10px;
       padding:12px 14px;
       border-radius:14px;
       border:1px solid rgba(255,255,255,0.18);
-      background:rgba(255,215,0,0.18);
+      background:rgba(255,0,60,0.18);
       color:#fff;
-      font-weight:800;
+      font-weight:900;
       width:min(360px, 90vw);
     }
     .btnRow{ display:flex; flex-direction:column; gap:8px; margin-top:10px; }
-    .btnLevel{ background:rgba(255,0,60,0.18); }
-    .btnLevel small{ font-weight:600; opacity:0.85; display:block; margin-top:2px; }
-    #btnStart:active, .btnLevel:active { transform: scale(0.99); }
+    .btnLevel small{ font-weight:650; opacity:0.85; display:block; margin-top:2px; }
+    .btnLevel:active, #btnStart:active { transform: scale(0.99); }
 
     .floatText{
       position:fixed;
       left:50%; top:50%;
       transform:translate(-50%,-50%);
-      color:#fff; font-weight:900; letter-spacing:0.6px;
-      text-shadow: 0 2px 14px rgba(0,0,0,0.65);
+      color:#fff; font-weight:950; letter-spacing:0.6px;
+      text-shadow: 0 2px 16px rgba(0,0,0,0.70);
       pointer-events:none;
       will-change: transform, opacity;
     }
 
-    #resultTitle{
-      font-size:22px; font-weight:900; margin:0 0 6px;
+    #resultTitle{ font-size:22px; font-weight:950; margin:0 0 6px; }
+    #resultSub{ font-size:13px; opacity:0.92; margin:0 0 12px; }
+
+    #caishenWrap{
+      width:min(360px, 86vw);
+      margin:10px auto 8px;
+      background:rgba(0,0,0,0.25);
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:18px;
+      padding:12px;
     }
-    #resultSub{
-      font-size:13px; opacity:0.9; margin:0 0 12px;
-    }
-    #caishen{
-      font-size:52px; line-height:1; margin:8px 0;
+    #caishenSVG{
+      width:100%;
+      height:auto;
+      display:block;
       filter: drop-shadow(0 10px 18px rgba(0,0,0,0.6));
     }
-    #tiny{
-      margin-top:8px;
-      font-size:11px; opacity:0.75;
-    }
+
+    #tiny{ margin-top:8px; font-size:11px; opacity:0.75; }
   </style>
 </head>
 
@@ -126,26 +134,14 @@
       <div id="topbar">
         <div class="pill">💰 Score: <span id="score">$0</span></div>
         <div class="pill">⏱️ Time: <span id="time">60</span>s</div>
-        <div class="pill">🎯 Target: <span id="target">$0</span></div>
+        <div class="pill">🎯 Goal: <span id="goal">$0</span></div>
       </div>
       <div id="crosshair"></div>
-      <div id="hint">Make a <b>pistol</b> hand (index out, other fingers curled). “Trigger” by tapping thumb closer to index knuckle to shoot.</div>
+      <div id="hint">🪙 +$5 • 🧧 +$10 • 🧨 -$2 — Make a <b>pistol</b> hand, tap thumb near index knuckle to shoot.</div>
     </div>
 
-    <div id="loading">
-      <div id="panel">
-        <h1>Ang Bao Shooter 🧧</h1>
-        <p>Choose a difficulty. We need camera permission and to download the hand model.</p>
-
-        <div class="btnRow">
-          <button class="btnLevel" data-level="easy">Easy 🧧 x20 <small>Slow targets • Win ≥ 10 hits • $10 per hit</small></button>
-          <button class="btnLevel" data-level="mid">Mid 🧧 x40 <small>Medium speed • Win ≥ 20 hits</small></button>
-          <button class="btnLevel" data-level="hard">Hard 🧧 x80 <small>Fast speed • Win ≥ 40 hits</small></button>
-        </div>
-
-        <button id="btnStart" style="display:none;">Start (Enable Camera)</button>
-        <div id="tiny">Tip: Use Safari on iPhone for best camera permission reliability.</div>
-      </div>
+    <div id="overlay">
+      <div id="panel"></div>
     </div>
   </div>
 
@@ -165,6 +161,7 @@
     const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
     const lerp  = (a, b, t) => a + (b - a) * t;
     const now = () => performance.now();
+    const rand = (a,b)=> a + Math.random()*(b-a);
 
     function dist2(a, b) {
       const dx = a.x - b.x, dy = a.y - b.y;
@@ -172,88 +169,103 @@
     }
 
     // -----------------------------
-    // Audio (no external files)
+    // Audio (more distinct "cash-out" on hit)
     // -----------------------------
     let audioCtx = null;
     function ensureAudio() {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
     }
+
+    // softer "pew"
     function sfxShoot() {
       if (!audioCtx) return;
       const t = audioCtx.currentTime;
       const o = audioCtx.createOscillator();
       const g = audioCtx.createGain();
       o.type = 'square';
-      o.frequency.setValueAtTime(420, t);
-      o.frequency.exponentialRampToValueAtTime(1200, t + 0.06);
+      o.frequency.setValueAtTime(240, t);
+      o.frequency.exponentialRampToValueAtTime(560, t + 0.05);
       g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.12, t + 0.01);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
+      g.gain.exponentialRampToValueAtTime(0.06, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
       o.connect(g).connect(audioCtx.destination);
-      o.start(t); o.stop(t + 0.10);
+      o.start(t); o.stop(t + 0.09);
     }
-    // "Cash/coin" hit sound
-    function sfxCash() {
+
+    // very obvious "coin jingle / cash-out"
+    function sfxCashOut() {
       if (!audioCtx) return;
       const t = audioCtx.currentTime;
 
-      // metallic ping
-      const o1 = audioCtx.createOscillator();
-      const g1 = audioCtx.createGain();
-      o1.type = 'sine';
-      o1.frequency.setValueAtTime(1200, t);
-      o1.frequency.exponentialRampToValueAtTime(600, t + 0.10);
-      g1.gain.setValueAtTime(0.0001, t);
-      g1.gain.exponentialRampToValueAtTime(0.18, t + 0.01);
-      g1.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
-      o1.connect(g1).connect(audioCtx.destination);
-      o1.start(t); o1.stop(t + 0.15);
+      // multiple short pings (like coins)
+      const freqs = [1560, 1240, 980];
+      freqs.forEach((f, i) => {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(f, t + i*0.02);
+        o.frequency.exponentialRampToValueAtTime(f*0.72, t + i*0.02 + 0.10);
+        g.gain.setValueAtTime(0.0001, t + i*0.02);
+        g.gain.exponentialRampToValueAtTime(0.16, t + i*0.02 + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + i*0.02 + 0.14);
+        o.connect(g).connect(audioCtx.destination);
+        o.start(t + i*0.02);
+        o.stop(t + i*0.02 + 0.16);
+      });
 
-      // short click
-      const o2 = audioCtx.createOscillator();
-      const g2 = audioCtx.createGain();
-      o2.type = 'triangle';
-      o2.frequency.setValueAtTime(200, t);
-      g2.gain.setValueAtTime(0.0001, t);
-      g2.gain.exponentialRampToValueAtTime(0.08, t + 0.005);
-      g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
-      o2.connect(g2).connect(audioCtx.destination);
-      o2.start(t); o2.stop(t + 0.07);
+      // tiny noise "cash rustle"
+      const dur = 0.12;
+      const bufferSize = Math.floor(audioCtx.sampleRate * dur);
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i=0;i<bufferSize;i++){
+        data[i] = (Math.random()*2-1) * Math.pow(1 - i/bufferSize, 2) * 0.25;
+      }
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+      const gN = audioCtx.createGain();
+      gN.gain.setValueAtTime(0.0001, t);
+      gN.gain.exponentialRampToValueAtTime(0.07, t + 0.01);
+      gN.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      noise.connect(gN).connect(audioCtx.destination);
+      noise.start(t);
+      noise.stop(t + dur);
     }
-    function sfxMiss() {
+
+    function sfxBad() {
       if (!audioCtx) return;
       const t = audioCtx.currentTime;
       const o = audioCtx.createOscillator();
       const g = audioCtx.createGain();
       o.type = 'triangle';
-      o.frequency.setValueAtTime(180, t);
-      o.frequency.exponentialRampToValueAtTime(90, t + 0.12);
+      o.frequency.setValueAtTime(150, t);
+      o.frequency.exponentialRampToValueAtTime(70, t + 0.14);
       g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.08, t + 0.01);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.13);
+      g.gain.exponentialRampToValueAtTime(0.10, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
       o.connect(g).connect(audioCtx.destination);
-      o.start(t); o.stop(t + 0.14);
+      o.start(t); o.stop(t + 0.17);
     }
 
-    function floatText(text, x, y, good=true) {
+    function floatText(text, x, y, color='rgba(255,215,0,1)') {
       const el = document.createElement('div');
       el.className = 'floatText';
       el.textContent = text;
       el.style.left = `${x}px`;
       el.style.top  = `${y}px`;
       el.style.fontSize = '22px';
-      el.style.color = good ? 'rgba(255,215,0,1)' : 'rgba(255,120,120,1)';
+      el.style.color = color;
       document.body.appendChild(el);
 
       const start = now();
-      const dur = 700;
+      const dur = 720;
       const y0 = y;
       function tick() {
         const t = (now() - start) / dur;
         if (t >= 1) { el.remove(); return; }
-        const yy = y0 - (t * 70);
-        const s  = 1 + t * 0.15;
+        const yy = y0 - (t * 72);
+        const s  = 1 + t * 0.18;
         el.style.transform = `translate(-50%,-50%) translateY(${yy-y0}px) scale(${s})`;
         el.style.opacity = `${1 - t}`;
         requestAnimationFrame(tick);
@@ -266,35 +278,51 @@
     // -----------------------------
     const video = document.getElementById('cam');
     const canvas = document.getElementById('gl');
-    const loading = document.getElementById('loading');
-    const btnStart = document.getElementById('btnStart');
-    const levelBtns = [...document.querySelectorAll('.btnLevel')];
-
+    const overlay = document.getElementById('overlay');
+    const panel = document.getElementById('panel');
     const scoreEl = document.getElementById('score');
     const timeEl  = document.getElementById('time');
-    const targetEl= document.getElementById('target');
+    const goalEl  = document.getElementById('goal');
     const crosshair = document.getElementById('crosshair');
 
     // -----------------------------
     // Game settings
     // -----------------------------
     const LEVELS = {
-      easy: { total: 20, speed: 0.10 },
-      mid:  { total: 40, speed: 0.15 },
-      hard: { total: 80, speed: 0.22 },
+      easy: { total: 20, speed: 0.11 },
+      mid:  { total: 40, speed: 0.16 },
+      hard: { total: 80, speed: 0.23 },
+    };
+    const ROUND_SECONDS = 60;
+    const ON_SCREEN = 4;
+
+    const TYPES = {
+      coin:     { label:'🪙', value:+5,  prob:0.38 },
+      angbao:   { label:'🧧', value:+10, prob:0.42 },
+      firework: { label:'🧨', value:-2,  prob:0.20 },
     };
 
+    function pickType() {
+      const r = Math.random();
+      let acc = 0;
+      for (const k of Object.keys(TYPES)) {
+        acc += TYPES[k].prob;
+        if (r <= acc) return k;
+      }
+      return 'angbao';
+    }
+
     let selectedLevel = null;
-
-    const ROUND_SECONDS = 60;
-    const SCORE_PER_HIT = 10;
-
     let roundActive = false;
     let timeLeft = ROUND_SECONDS;
+
     let score = 0;
-    let hits = 0;
-    let totalTargets = 0;
-    let winHitsNeeded = 0;
+    let totalSpawnLimit = 0;
+    let spawned = 0;
+
+    // win condition based on HALF of total POSITIVE possible payout for this round
+    let totalPositivePossible = 0;
+    let goalScore = 0;
 
     // -----------------------------
     // Three.js
@@ -315,41 +343,43 @@
     const laserLine = new THREE.Line(laserGeom, laserMat);
     scene.add(laserLine);
 
-    // Ang Bao targets
-    const targets = [];
-    const ON_SCREEN = 4;
+    function worldFromNorm(nx, ny) {
+      const wx = (nx - 0.5) * 2;
+      const wy = (0.5 - ny) * 2;
+      return { x: wx, y: wy };
+    }
 
-    function makeAngBaoTexture() {
+    // -----------------------------
+    // Target textures (single-file, canvas-generated)
+    // -----------------------------
+    function makeCanvasTexture(drawFn) {
       const c = document.createElement('canvas');
       c.width = 256; c.height = 256;
       const ctx = c.getContext('2d');
+      drawFn(ctx);
+      const tex = new THREE.CanvasTexture(c);
+      tex.needsUpdate = true;
+      return tex;
+    }
 
-      // background red gradient
+    const texAngBao = makeCanvasTexture((ctx) => {
       const g = ctx.createLinearGradient(0,0,256,256);
       g.addColorStop(0, '#ff2a2a');
       g.addColorStop(1, '#b9002a');
       ctx.fillStyle = g;
       ctx.fillRect(0,0,256,256);
-
-      // gold border
       ctx.strokeStyle = '#ffd700';
       ctx.lineWidth = 12;
       ctx.strokeRect(16,16,224,224);
-
-      // inner border
       ctx.globalAlpha = 0.85;
       ctx.lineWidth = 6;
       ctx.strokeRect(32,32,192,192);
       ctx.globalAlpha = 1;
-
-      // 福 character style (simple)
       ctx.fillStyle = '#ffd700';
       ctx.font = 'bold 140px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('福', 128, 132);
-
-      // tiny sparkle dots
       ctx.globalAlpha = 0.55;
       for (let i=0;i<14;i++){
         ctx.beginPath();
@@ -357,22 +387,97 @@
         ctx.fill();
       }
       ctx.globalAlpha = 1;
+    });
 
-      const tex = new THREE.CanvasTexture(c);
-      tex.needsUpdate = true;
-      return tex;
+    const texCoin = makeCanvasTexture((ctx) => {
+      ctx.fillStyle = '#1b0d00';
+      ctx.fillRect(0,0,256,256);
+      const grad = ctx.createRadialGradient(90,80,20, 128,128,140);
+      grad.addColorStop(0, '#fff2b0');
+      grad.addColorStop(0.35, '#ffd700');
+      grad.addColorStop(1, '#b8860b');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(128,128,92,0,Math.PI*2);
+      ctx.fill();
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+      ctx.lineWidth = 10;
+      ctx.beginPath();
+      ctx.arc(128,128,78,0,Math.PI*2);
+      ctx.stroke();
+
+      ctx.fillStyle = '#7a4d00';
+      ctx.font = 'bold 120px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('$', 128, 136);
+
+      ctx.globalAlpha = 0.35;
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc(92,92,20,0,Math.PI*2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    });
+
+    const texFire = makeCanvasTexture((ctx) => {
+      ctx.fillStyle = '#0b0b0b';
+      ctx.fillRect(0,0,256,256);
+
+      // firecracker body
+      const g = ctx.createLinearGradient(0,0,256,256);
+      g.addColorStop(0, '#ff3b3b');
+      g.addColorStop(1, '#a80018');
+      ctx.fillStyle = g;
+      ctx.fillRect(54,92,148,72);
+
+      // caps
+      ctx.fillStyle = '#ffd700';
+      ctx.fillRect(54,92,18,72);
+      ctx.fillRect(184,92,18,72);
+
+      // fuse
+      ctx.strokeStyle = '#ffd700';
+      ctx.lineWidth = 10;
+      ctx.beginPath();
+      ctx.moveTo(200,98);
+      ctx.quadraticCurveTo(230,70,240,50);
+      ctx.stroke();
+
+      // spark
+      ctx.fillStyle = '#ffcc00';
+      for (let i=0;i<10;i++){
+        ctx.beginPath();
+        ctx.arc(238 + rand(-10,10), 48 + rand(-10,10), rand(3,6), 0, Math.PI*2);
+        ctx.fill();
+      }
+
+      // warning
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 64px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('!', 128, 128);
+    });
+
+    function textureForType(typeKey) {
+      if (typeKey === 'coin') return texCoin;
+      if (typeKey === 'firework') return texFire;
+      return texAngBao;
     }
 
-    const angBaoTex = makeAngBaoTexture();
+    // -----------------------------
+    // Targets logic (more random motion)
+    // -----------------------------
+    const targets = [];
 
-    function makeTargetMesh() {
-      const w = 0.16, h = 0.20; // world-ish size
-      const geom = new THREE.PlaneGeometry(w, h);
-
+    function makeTargetMesh(typeKey) {
+      const geom = new THREE.PlaneGeometry(0.18, 0.22);
       const mat = new THREE.MeshBasicMaterial({
-        map: angBaoTex,
+        map: textureForType(typeKey),
         transparent: true,
-        opacity: 0.95
+        opacity: 0.98
       });
       const mesh = new THREE.Mesh(geom, mat);
       scene.add(mesh);
@@ -380,37 +485,67 @@
     }
 
     function spawnTarget() {
+      if (!roundActive) return null;
+      if (spawned >= totalSpawnLimit) return null;
+
+      const typeKey = pickType();
+      const mesh = makeTargetMesh(typeKey);
+
+      // Spawn near edges
       const edge = Math.floor(Math.random()*4);
+      const pad = 0.12;
       let x, y;
-      const pad = 0.10;
       if (edge === 0) { x = Math.random(); y = -pad; }
       if (edge === 1) { x = 1+pad; y = Math.random(); }
       if (edge === 2) { x = Math.random(); y = 1+pad; }
       if (edge === 3) { x = -pad; y = Math.random(); }
 
-      const mesh = makeTargetMesh();
+      // Random destination (NOT always center)
+      const dest = { x: rand(0.10, 0.90), y: rand(0.15, 0.85) };
 
-      const cx = 0.5, cy = 0.5;
-      const dx = (cx - x) + (Math.random()-0.5)*0.12;
-      const dy = (cy - y) + (Math.random()-0.5)*0.12;
-      const len = Math.max(0.0001, Math.hypot(dx, dy));
+      // Velocity towards destination, plus sideways drift
+      const base = LEVELS[selectedLevel].speed;
+      const speed = base * rand(0.85, 1.35);
 
-      // speed based on difficulty
-      const base = (LEVELS[selectedLevel]?.speed ?? 0.12);
-      const speed = base + (Math.random()*base*0.35);
+      const dx = dest.x - x;
+      const dy = dest.y - y;
+      const len = Math.max(0.0001, Math.hypot(dx,dy));
+      let vx = (dx/len) * speed;
+      let vy = (dy/len) * speed;
 
-      const vx = (dx/len) * speed;
-      const vy = (dy/len) * speed;
+      // Add random lateral component so paths vary
+      const lateral = rand(-0.09, 0.09) * base;
+      vx += - (dy/len) * lateral;
+      vy +=   (dx/len) * lateral;
 
       const t = {
+        typeKey,
+        value: TYPES[typeKey].value,
         mesh,
         x, y,
         vx, vy,
-        r: 0.12, // hit radius in normalized screen space
-        alive: true
+        dest,
+        r: (typeKey === 'coin') ? 0.11 : (typeKey === 'firework' ? 0.12 : 0.13),
+        alive: true,
+        // extra wobble params
+        wobbleA: rand(0.03, 0.07),
+        wobbleF: rand(1.5, 3.2),
+        spin: rand(-0.9, 0.9),
+        born: now()
       };
+
+      spawned += 1;
+      if (t.value > 0) totalPositivePossible += t.value;
+
       targets.push(t);
       return t;
+    }
+
+    function ensureOnScreen() {
+      if (!roundActive) return;
+      while (targets.filter(t=>t.alive).length < ON_SCREEN && spawned < totalSpawnLimit) {
+        spawnTarget();
+      }
     }
 
     function clearTargets() {
@@ -418,11 +553,6 @@
         if (t.mesh) scene.remove(t.mesh);
       }
       targets.length = 0;
-    }
-
-    function ensureTargetCount() {
-      if (!roundActive) return;
-      while (targets.filter(t=>t.alive).length < ON_SCREEN) spawnTarget();
     }
 
     // -----------------------------
@@ -471,7 +601,7 @@
       const idxTip = lm[8];
       aimPoint = { x: 1 - idxTip.x, y: idxTip.y };
 
-      // trigger threshold (slightly forgiving)
+      // Trigger sensitivity (tune here if you want)
       const thumbTip = lm[4];
       const idxMCP = lm[5];
       const a = { x: 1 - thumbTip.x, y: thumbTip.y };
@@ -488,9 +618,11 @@
     function applyAimAssist(aim, dt) {
       if (!aim) return;
 
+      // follow finger
       cross.x = lerp(cross.x, aim.x, clamp(dt*10, 0, 1));
       cross.y = lerp(cross.y, aim.y, clamp(dt*10, 0, 1));
 
+      // magnet to nearest target (but smaller than before)
       let best = null;
       let bestD = 999;
       for (const t of targets) {
@@ -499,10 +631,10 @@
         if (dd < bestD) { bestD = dd; best = t; }
       }
 
-      const magnetR = 0.16;
+      const magnetR = 0.13; // reduced so you can’t just camp center as easily
       if (best && bestD < magnetR) {
         const k = (1 - (bestD / magnetR));
-        const snap = clamp(k * dt * 18, 0, 1);
+        const snap = clamp(k * dt * 16, 0, 1);
         cross.x = lerp(cross.x, best.x, snap);
         cross.y = lerp(cross.y, best.y, snap);
       }
@@ -511,12 +643,6 @@
     function setCrosshairDOM() {
       crosshair.style.left = `${cross.x * W}px`;
       crosshair.style.top  = `${cross.y * H}px`;
-    }
-
-    function worldFromNorm(nx, ny) {
-      const wx = (nx - 0.5) * 2;
-      const wy = (0.5 - ny) * 2;
-      return { x: wx, y: wy };
     }
 
     function updateLaser(aim) {
@@ -550,41 +676,89 @@
         hitT.alive = false;
         scene.remove(hitT.mesh);
 
-        hits += 1;
-        score += SCORE_PER_HIT;
+        // score by type
+        score += hitT.value;
+        if (score < 0) score = 0; // prevent negative display
         scoreEl.textContent = `$${score}`;
 
-        sfxCash();
-        floatText("+$10", px, py, true);
+        if (hitT.value > 0) {
+          sfxCashOut(); // cash-out sound on positive hit
+          floatText(`+ $${hitT.value}`, px, py, 'rgba(255,215,0,1)');
+        } else {
+          sfxBad();
+          floatText(`- $${Math.abs(hitT.value)}`, px, py, 'rgba(255,120,120,1)');
+        }
 
-        ensureTargetCount();
+        ensureOnScreen();
       } else {
-        sfxMiss();
-        floatText("MISS", px, py, false);
+        floatText("MISS", px, py, 'rgba(170,200,255,0.95)');
       }
     }
 
     // -----------------------------
     // Round control + end screen
     // -----------------------------
+    function caishenSVG() {
+      // Inline SVG "image" of 财神爷 (still single-file)
+      return `
+      <svg id="caishenSVG" viewBox="0 0 600 340" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="g1" x1="0" x2="1">
+            <stop offset="0" stop-color="#ff2a2a"/>
+            <stop offset="1" stop-color="#b9002a"/>
+          </linearGradient>
+          <linearGradient id="gold" x1="0" x2="1">
+            <stop offset="0" stop-color="#fff2b0"/>
+            <stop offset="0.45" stop-color="#ffd700"/>
+            <stop offset="1" stop-color="#b8860b"/>
+          </linearGradient>
+        </defs>
+
+        <!-- background -->
+        <rect x="10" y="10" width="580" height="320" rx="26" fill="rgba(0,0,0,0.10)" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+        <circle cx="300" cy="150" r="120" fill="url(#g1)" opacity="0.95"/>
+        <circle cx="300" cy="150" r="102" fill="none" stroke="url(#gold)" stroke-width="10"/>
+
+        <!-- hat -->
+        <path d="M190 120 C240 40, 360 40, 410 120 Z" fill="url(#gold)"/>
+        <rect x="215" y="112" width="170" height="18" rx="9" fill="#7a4d00" opacity="0.55"/>
+
+        <!-- face -->
+        <circle cx="300" cy="165" r="72" fill="#ffd9b3"/>
+        <circle cx="270" cy="155" r="10" fill="#1b0d00"/>
+        <circle cx="330" cy="155" r="10" fill="#1b0d00"/>
+        <path d="M275 190 C300 210, 325 210, 350 190" fill="none" stroke="#1b0d00" stroke-width="8" stroke-linecap="round"/>
+
+        <!-- beard -->
+        <path d="M250 205 C265 250, 335 250, 350 205" fill="#fff" stroke="rgba(0,0,0,0.15)" stroke-width="2"/>
+
+        <!-- robe -->
+        <path d="M170 310 C185 240, 245 220, 300 220 C355 220, 415 240, 430 310 Z" fill="url(#g1)" opacity="0.95"/>
+        <path d="M210 310 C225 255, 265 245, 300 245 C335 245, 375 255, 390 310 Z" fill="none" stroke="url(#gold)" stroke-width="8"/>
+
+        <!-- ingot -->
+        <path d="M250 255 C270 235, 330 235, 350 255 C340 285, 260 285, 250 255 Z" fill="url(#gold)"/>
+        <text x="300" y="272" text-anchor="middle" font-size="28" font-weight="900" fill="#7a4d00">财</text>
+
+        <!-- HUAT -->
+        <text x="300" y="70" text-anchor="middle" font-size="42" font-weight="950" fill="#ffd700" stroke="rgba(0,0,0,0.35)" stroke-width="3">HUAT AH!</text>
+      </svg>`;
+    }
+
     function showMenu() {
       roundActive = false;
-      loading.style.display = 'flex';
-
-      // swap panel to menu
-      const panel = document.getElementById('panel');
+      overlay.style.display = 'flex';
       panel.innerHTML = `
-        <h1>Ang Bao Shooter 🧧</h1>
-        <p>Select a difficulty. Round = <b>${ROUND_SECONDS}s</b>. Each hit = <b>$${SCORE_PER_HIT}</b>.</p>
+        <h1>Ang Bao Shooter 🧧🪙🧨</h1>
+        <p>Round = <b>${ROUND_SECONDS}s</b>. Targets: 🪙 +$5 • 🧧 +$10 • 🧨 -$2</p>
         <div class="btnRow">
-          <button class="btnLevel" data-level="easy">Easy 🧧 x20 <small>Slow • Win ≥ 10 hits • Target $200</small></button>
-          <button class="btnLevel" data-level="mid">Mid 🧧 x40 <small>Medium • Win ≥ 20 hits • Target $400</small></button>
-          <button class="btnLevel" data-level="hard">Hard 🧧 x80 <small>Fast • Win ≥ 40 hits • Target $800</small></button>
+          <button class="btnLevel" data-level="easy">Easy (20) <small>Slow • Win = half of total possible payout</small></button>
+          <button class="btnLevel" data-level="mid">Mid (40) <small>Medium • Win = half of total possible payout</small></button>
+          <button class="btnLevel" data-level="hard">Hard (80) <small>Fast • Win = half of total possible payout</small></button>
         </div>
-        <div id="tiny">Tip: Keep your hand steady and within good lighting.</div>
+        <div id="tiny">Tip: Camping the center won’t work now — targets fly to random spots 😉</div>
       `;
-
-      [...panel.querySelectorAll('.btnLevel')].forEach(btn => {
+      panel.querySelectorAll('.btnLevel').forEach(btn => {
         btn.addEventListener('click', () => startRound(btn.dataset.level));
       });
     }
@@ -593,48 +767,55 @@
       roundActive = false;
       clearTargets();
 
-      const panel = document.getElementById('panel');
-      const targetMoney = totalTargets * SCORE_PER_HIT;
-      const needMoney = winHitsNeeded * SCORE_PER_HIT;
-
+      const sub = `You scored <b>$${score}</b> • Goal ≥ <b>$${goalScore}</b><br/>Total possible payout (positive): <b>$${totalPositivePossible}</b>`;
       panel.innerHTML = win ? `
-        <div id="resultTitle">YOU WIN! 🧧💰</div>
-        <div id="resultSub">You scored <b>$${score}</b> (Need ≥ <b>$${needMoney}</b>). 财神爷 is happy!</div>
-        <div id="caishen">🧧🧧 财神爷 🧧🧧</div>
-        <div style="font-size:28px; font-weight:900; margin:6px 0 10px; color:#ffd700;">HUAT AH!</div>
+        <div id="resultTitle">YOU WIN 🧧💰</div>
+        <div id="resultSub">${sub}</div>
+        <div id="caishenWrap">${caishenSVG()}</div>
         <button class="btnLevel" id="playAgain">Play Again</button>
-        <div id="tiny">Difficulty: ${selectedLevel.toUpperCase()} • Total possible: $${targetMoney}</div>
+        <div id="tiny">Try harder level for more HUAT 😄</div>
       ` : `
         <div id="resultTitle">GAME OVER</div>
-        <div id="resultSub">You scored <b>$${score}</b>. Need ≥ <b>$${needMoney}</b> to win.</div>
+        <div id="resultSub">${sub}</div>
         <button class="btnLevel" id="playAgain">Try Again</button>
-        <div id="tiny">Difficulty: ${selectedLevel.toUpperCase()} • Total possible: $${targetMoney}</div>
+        <div id="tiny">Tip: Aim for 🧧 and 🪙, avoid 🧨</div>
       `;
-
-      loading.style.display = 'flex';
+      overlay.style.display = 'flex';
       panel.querySelector('#playAgain').addEventListener('click', showMenu);
     }
 
     function startRound(levelKey) {
       selectedLevel = levelKey;
 
-      // init targets + scoreboard
-      totalTargets = LEVELS[selectedLevel].total;
-      winHitsNeeded = Math.ceil(totalTargets / 2);
-
+      // reset round stats
       score = 0;
-      hits = 0;
       timeLeft = ROUND_SECONDS;
+
+      totalSpawnLimit = LEVELS[selectedLevel].total;
+      spawned = 0;
+
+      totalPositivePossible = 0;
+      goalScore = 0;
 
       scoreEl.textContent = `$0`;
       timeEl.textContent = `${timeLeft}`;
-      targetEl.textContent = `$${totalTargets * SCORE_PER_HIT}`;
+      goalEl.textContent = `$0`;
 
       clearTargets();
       roundActive = true;
-      loading.style.display = 'none';
+      overlay.style.display = 'none';
 
-      ensureTargetCount();
+      // pre-spawn enough to fill screen immediately
+      ensureOnScreen();
+
+      // compute goal after initial fills + ongoing spawns:
+      // We'll update goal after we reach the spawn limit (at end of round),
+      // but user needs a goal early. So we estimate:
+      // Use expected value based on probabilities:
+      const exp = TYPES.coin.value*TYPES.coin.prob + TYPES.angbao.value*TYPES.angbao.prob + Math.max(0,TYPES.firework.value)*TYPES.firework.prob;
+      const estTotal = Math.round(exp * totalSpawnLimit);
+      goalScore = Math.ceil(estTotal / 2);
+      goalEl.textContent = `$${goalScore}`;
     }
 
     // timer tick
@@ -647,9 +828,62 @@
         timeLeft -= 1;
         timeEl.textContent = `${timeLeft}`;
         if (timeLeft <= 0) {
-          const win = hits >= winHitsNeeded;
-          showResult(win);
+          // finalize goal using actual spawned positive possible
+          // (in case random distribution differs)
+          goalScore = Math.ceil(totalPositivePossible / 2);
+          goalEl.textContent = `$${goalScore}`;
+          showResult(score >= goalScore);
         }
+      }
+    }
+
+    // -----------------------------
+    // Motion update (more random, less "to center")
+    // -----------------------------
+    function updateTargets(dt) {
+      for (const t of targets) {
+        if (!t.alive) continue;
+
+        // base motion
+        t.x += t.vx * dt;
+        t.y += t.vy * dt;
+
+        // wobble drift (curvy paths)
+        const age = (now() - t.born) / 1000;
+        t.x += Math.sin(age * t.wobbleF) * t.wobbleA * dt;
+        t.y += Math.cos(age * (t.wobbleF*0.9)) * (t.wobbleA*0.8) * dt;
+
+        // if off-screen too far, despawn and replace
+        if (t.x < -0.25 || t.x > 1.25 || t.y < -0.25 || t.y > 1.25) {
+          t.alive = false;
+          scene.remove(t.mesh);
+          ensureOnScreen();
+          continue;
+        }
+
+        // if reached near destination, "retarget" to make movement unpredictable
+        const d = Math.hypot(t.dest.x - t.x, t.dest.y - t.y);
+        if (d < 0.08) {
+          t.dest = { x: rand(0.05, 0.95), y: rand(0.12, 0.88) };
+          const base = LEVELS[selectedLevel].speed;
+          const speed = base * rand(0.85, 1.35);
+          const dx = t.dest.x - t.x;
+          const dy = t.dest.y - t.y;
+          const len = Math.max(0.0001, Math.hypot(dx,dy));
+          let vx = (dx/len) * speed;
+          let vy = (dy/len) * speed;
+          const lateral = rand(-0.10, 0.10) * base;
+          vx += - (dy/len) * lateral;
+          vy +=   (dx/len) * lateral;
+          t.vx = vx; t.vy = vy;
+        }
+
+        const w = worldFromNorm(t.x, t.y);
+        t.mesh.position.set(w.x, w.y, 0);
+
+        const pulse = 1 + 0.08 * Math.sin((now()*0.006) + t.x*10);
+        t.mesh.scale.set(pulse, pulse, 1);
+        t.mesh.rotation.z += t.spin * dt * 0.6;
       }
     }
 
@@ -670,38 +904,9 @@
     resize();
 
     // -----------------------------
-    // Main loop
+    // Loops
     // -----------------------------
     let lastT = now();
-    function update(dt) {
-      // move targets
-      for (const t of targets) {
-        if (!t.alive) continue;
-        t.x += t.vx * dt;
-        t.y += t.vy * dt;
-
-        // if reaches center, respawn (keeps action going)
-        const centerDist = Math.hypot(t.x - 0.5, t.y - 0.5);
-        if (centerDist < 0.06) {
-          t.alive = false;
-          scene.remove(t.mesh);
-          ensureTargetCount();
-        }
-      }
-
-      // update mesh positions
-      for (const t of targets) {
-        if (!t.alive) continue;
-        const w = worldFromNorm(t.x, t.y);
-        t.mesh.position.set(w.x, w.y, 0);
-
-        // subtle wobble
-        const pulse = 1 + 0.08 * Math.sin((now()*0.006) + t.x*10);
-        t.mesh.scale.set(pulse, pulse, 1);
-        t.mesh.rotation.z = 0.08 * Math.sin((now()*0.004) + t.y*8);
-      }
-    }
-
     function renderLoop() {
       const t = now();
       const dt = Math.min(0.033, (t - lastT) / 1000);
@@ -709,14 +914,14 @@
 
       const g = updateGesture();
       applyAimAssist(g.aim, dt);
-
       if (g.trigger) shoot();
 
       setCrosshairDOM();
       updateLaser(g.aim);
 
       if (roundActive) {
-        update(dt);
+        updateTargets(dt);
+        ensureOnScreen();
         updateTimer(dt);
       }
 
@@ -725,16 +930,12 @@
     }
 
     // -----------------------------
-    // MediaPipe Hands (version pinned + crash safe)
+    // MediaPipe Hands (pinned + crash safe)
     // -----------------------------
     async function startCameraAndHands() {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio:false,
-        video:{
-          facingMode: "user",
-          width: { ideal: 1280 },
-          height:{ ideal: 720 }
-        }
+        video:{ facingMode:"user", width:{ideal:1280}, height:{ideal:720} }
       });
       video.srcObject = stream;
       await video.play();
@@ -754,12 +955,10 @@
         try {
           if (!modelReady) {
             modelReady = true;
-            // show menu once model is alive
             showMenu();
           }
           const lms = results.multiHandLandmarks && results.multiHandLandmarks[0];
-          if (lms) lastHand = { landmarks: lms };
-          else lastHand = null;
+          lastHand = lms ? { landmarks: lms } : null;
         } catch (e) {
           console.warn("onResults error:", e);
         }
@@ -781,25 +980,110 @@
         }
       }
       requestAnimationFrame(aiLoop);
-
       requestAnimationFrame(renderLoop);
     }
 
     // -----------------------------
-    // Boot: first show a "tap to start camera" screen (iOS needs gesture)
+    // Gesture logic
     // -----------------------------
-    const panel = document.getElementById('panel');
+    function updateGesture() {
+      pistolActive = false;
+      let triggerNow = false;
+      let aimPoint = null;
+
+      if (!lastHand || !lastHand.landmarks || lastHand.landmarks.length < 21) {
+        prevTrigger = false;
+        return { pistol:false, trigger:false, aim:null };
+      }
+
+      const lm = lastHand.landmarks;
+
+      const indexExt  = isFingerExtended(lm, 8, 6, 5);
+      const middleCur = isFingerCurled(lm, 12, 10, 9);
+      const ringCur   = isFingerCurled(lm, 16, 14, 13);
+      const pinkyCur  = isFingerCurled(lm, 20, 18, 17);
+      pistolActive = indexExt && middleCur && ringCur && pinkyCur;
+
+      const idxTip = lm[8];
+      aimPoint = { x: 1 - idxTip.x, y: idxTip.y };
+
+      const thumbTip = lm[4];
+      const idxMCP = lm[5];
+      const a = { x: 1 - thumbTip.x, y: thumbTip.y };
+      const b = { x: 1 - idxMCP.x, y: idxMCP.y };
+      const d = dist2(a,b);
+      triggerNow = pistolActive && (d < 0.095);
+
+      const fired = triggerNow && !prevTrigger;
+      prevTrigger = triggerNow;
+
+      return { pistol:pistolActive, trigger:fired, aim:aimPoint };
+    }
+
+    function isFingerExtended(lm, tip, pip, mcp) {
+      const t = lm[tip], p = lm[pip], m = lm[mcp];
+      return (t.y < p.y) && (p.y < m.y);
+    }
+    function isFingerCurled(lm, tip, pip, mcp) {
+      const t = lm[tip], p = lm[pip], m = lm[mcp];
+      return (t.y > p.y) || (t.y > m.y);
+    }
+
+    // -----------------------------
+    // Aim assist & laser
+    // -----------------------------
+    function applyAimAssist(aim, dt) {
+      if (!aim) return;
+      cross.x = lerp(cross.x, aim.x, clamp(dt*10, 0, 1));
+      cross.y = lerp(cross.y, aim.y, clamp(dt*10, 0, 1));
+
+      let best = null;
+      let bestD = 999;
+      for (const t of targets) {
+        if (!t.alive) continue;
+        const dd = Math.hypot(t.x - cross.x, t.y - cross.y);
+        if (dd < bestD) { bestD = dd; best = t; }
+      }
+
+      const magnetR = 0.13;
+      if (best && bestD < magnetR) {
+        const k = (1 - (bestD / magnetR));
+        const snap = clamp(k * dt * 16, 0, 1);
+        cross.x = lerp(cross.x, best.x, snap);
+        cross.y = lerp(cross.y, best.y, snap);
+      }
+    }
+
+    function setCrosshairDOM() {
+      crosshair.style.left = `${cross.x * W}px`;
+      crosshair.style.top  = `${cross.y * H}px`;
+    }
+
+    function updateLaser(aim) {
+      if (!aim) { laserMat.opacity = 0.0; return; }
+      laserMat.opacity = pistolActive ? 0.90 : 0.25;
+      const a = worldFromNorm(aim.x, aim.y);
+      const b = worldFromNorm(cross.x, cross.y);
+      const pos = laserGeom.attributes.position.array;
+      pos[0]=a.x; pos[1]=a.y; pos[2]=0;
+      pos[3]=b.x; pos[4]=b.y; pos[5]=0;
+      laserGeom.attributes.position.needsUpdate = true;
+    }
+
+    // -----------------------------
+    // Boot UI
+    // -----------------------------
     panel.innerHTML = `
-      <h1>Ang Bao Shooter 🧧</h1>
-      <p>Tap Start to enable camera and load the hand model.</p>
+      <h1>Ang Bao Shooter 🧧🪙🧨</h1>
+      <p>Tap Start to enable camera + load the hand model.</p>
       <button id="btnStart">Start (Enable Camera)</button>
-      <div id="tiny">After loading, you can select Easy / Mid / Hard.</div>
+      <div id="tiny">After loading, choose Easy / Mid / Hard.</div>
     `;
     const startBtn = panel.querySelector('#btnStart');
 
     startBtn.addEventListener('click', async () => {
       try {
-        ensureAudio(); // unlock audio on iOS
+        ensureAudio();
         startBtn.disabled = true;
         startBtn.textContent = "Starting…";
         await startCameraAndHands();
